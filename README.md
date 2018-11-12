@@ -10,12 +10,12 @@ A menu-driven system to help you create, modify, and display your stocks' averag
 * \*nix-based OS in the command-line interface <br>
 
 ## Usage ##
- - Linux users should download the package <code> unzip </code> with:<br>
-<code> sudo apt-get install unzip </code> <br><br>
+ - Linux users should download the package <code>unzip</code> with:<br>
+<code>sudo apt-get install unzip</code> <br><br>
  - [Download](https://github.com/Mas9311/stock-average/archive/master.zip) this repo then open a command line window (Terminal) <br>
-<code> cd <local/path/to/master.zip> </code> <br>
-<code> unzip master.zip </code> <br>
-<code> python3 stock-average.py </code>
+<code>cd <local/path/to/master.zip></code> <br><br>
+<code>unzip master.zip</code> <br><br>
+<code>python3 stock-average.py</code>
 
 - - -
 
