@@ -2,7 +2,7 @@
 
 - - -
 
-A menu-driven system to help you create, modify, and display a stock's average if you were to buy additional shares today. <br>
+A menu-driven system to help you create, modify, and display your stocks' average if you were to buy additional shares today. <br>
 
 ## Requirements ##
 
