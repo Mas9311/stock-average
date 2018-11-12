@@ -60,16 +60,16 @@ def make_file(stock_symbol):
     file_path = get_file(stock_symbol)
 
     with open(file_path, 'w') as new_file:
-        crypto = input('Is ' + stock_symbol + ' a cryptocurrency? \n\t\'y\' or simply press enter for no\n')
+        crypto = input('Is ' + stock_symbol + ' a cryptocurrency? \n\t\'y\' or simply press enter for no\n').strip().lower()
         if len(crypto) is not 0:
             if crypto.strip().lower()[0] == 'y':
                 new_file.write(stock_symbol.upper() + ' is a cryptocurrency!')
         new_file.write('\n')
 
-        shares = input('How many shares of ' + stock_symbol.upper() + ' do you currently own?\n')
-        new_file.write(input('What price are you currently averaging?\n') + '\n')
+        shares = input('How many shares of ' + stock_symbol.upper() + ' do you currently own?\n').strip().lower()
+        new_file.write(input('What price are you currently averaging?\n').strip().lower() + '\n')
         new_file.write(shares + '\n')
-        new_file.write(input('And what is the current price?\n'))
+        new_file.write(input('And what is the current price?\n').strip().lower())
         new_file.close()
 
 
@@ -84,11 +84,9 @@ def get_parameters(stock_symbol):
         lines = stock_file.read().splitlines()
         stock_file.close()
 
-        lines[0] = bool(lines[0])
-        lines[1] = abs(float(lines[1]))  # purchased price
-        lines[2] = abs(float(lines[2]))  # purchased quantity
+        lines[0] = bool(lines[0].strip())
+        lines[1] = abs(float(lines[1].strip()))  # purchased price
+        lines[2] = abs(float(lines[2].strip()))  # purchased quantity
         if len(lines) >= 4:
             lines[3] = abs(float(lines[3]))  # current price
-            if len(lines) >= 5:
-                lines[4] = abs(float(lines[4]))  # additional money you wish to add
         return lines
