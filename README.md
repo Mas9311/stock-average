@@ -7,13 +7,14 @@ A menu-driven system to help you create, modify, and display your stocks' averag
 ## Requirements ##
 
 * [Python 3.x](https://www.python.org/downloads/) <br>
-* Linux or Unix based OS in the command-line interface <br>
+* \*nix-based OS in the command-line interface <br>
 
 ## Usage ##
-
-The following commands will download this repo then run with Python 3: <br>
- - Open a command line window (Terminal) <br>
-<code> wget https://github.com/Mas9311/stock-average.git </code> <br>
+ - Linux users should download the package <code> unzip </code> with:<br>
+<code> sudo apt-get install unzip </code> <br><br>
+ - [Download](https://github.com/Mas9311/stock-average/archive/master.zip) this repo then open a command line window (Terminal) <br>
+<code> cd <local/path/to/master.zip> </code> <br>
+<code> unzip master.zip </code> <br>
 <code> python3 stock-average.py </code>
 
 - - -
