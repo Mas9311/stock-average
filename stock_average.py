@@ -8,10 +8,10 @@ import stock
 import file_helper as h
 
 
-#########################
-# Usage:                #
-#  python3 stock_avg.py #
-#########################
+#############################
+# Usage:                    #
+#  python3 stock_average.py #
+#############################
 
 
 def add_new_stock(new_shares_bought):
