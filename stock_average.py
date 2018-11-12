@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import average
-from decimal import *
 import math
 import menu
 import stock
@@ -46,8 +45,13 @@ def iterate_through_shares(money):
     if not stock.crypto:
         # "How many shares you can buy today with that money?"
         shares = math.floor(money / stock.current_price)
-        for new_shares_bought in range(1, (shares + 1)):
-            add_new_stock(new_shares_bought)
+        if shares is not 0:
+            for new_shares_bought in range(1, (shares + 1)):
+                add_new_stock(new_shares_bought)
+        else:
+            print('Unfortunately, that\'s not enough to buy a share.')
+            print('Try again, but increase the money this time', end='\n\n')
+            update_then_money()
     else:
         # "How many iterations are we going to print to console?"
         iterations = int(math.sqrt(money))
@@ -71,7 +75,7 @@ def print_new_average(new_shares_bought, spent_money):
 
 def get_money():
     """Retrieves dollar amount from user to gauge how much they are willing to spend"""
-    money = input('How much additional money are you willing to spend?\n').strip()
+    money = input('How much additional money are you willing to spend?\n').strip().lower()
     try:
         return abs(float(money))
     except ValueError:
@@ -86,6 +90,17 @@ def calculate_money():
     money = get_money()
     iterate_through_shares(money)
 
+    # After printing all the possible options of additional stocks, print original average
+    print('{} is your current average of'.format(stock.price(stock.purchased_price)), symbol.upper())
+
+
+def update_then_money():
+    # Would you like to update anything in this file?
+    menu.update_file(stock)
+
+    # How much additional money are you willing to spend?
+    calculate_money()
+
 
 if __name__ == '__main__':
     symbol = input('What is the symbol of the stock?\n').strip().lower()
@@ -97,11 +112,5 @@ if __name__ == '__main__':
     # Creates the class instance for the Average
     average = average.Average(stock.purchased_price * stock.purchased_quantity, stock.purchased_quantity)
 
-    # Would you like to update anything in this file?
-    menu.update_file(stock)
-
-    # How much additional money are you willing to spend?
-    calculate_money()
-
-    # After printing all the possible options of additional stocks, print original average
-    print('{} is your current average of'.format(stock.price(stock.purchased_price)), symbol.upper())
+    # "Do you want to update the stock?" -- "How much money are you willing tp spend?"
+    update_then_money()
