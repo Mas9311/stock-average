@@ -79,17 +79,19 @@ def print_new_average(new_shares_bought, spent_money):
 
 def get_money():
     """Retrieves dollar amount from user to gauge how much they are willing to spend"""
-    money = input('How much additional money are you willing to spend?\n').strip().lower()
+    money_s = input('How much additional money are you willing to spend?\n').strip().lower()
+
     try:
-        output_money = abs(float(money))
-        if output_money is None:
-            get_money()
-        return output_money
+        money_d = float(money_s)
+        if money_d < 0:
+            print('You cannot add negative money, but we\'ll continue with positive')
+            money_d = abs(money_d)
+        return money_d
     except ValueError:
-        if money:
-            print('ERROR:', money, 'must be valid number')
+        if money_s:
+            print('ERROR:', money_s, 'must be valid number')
         else:
-            print('ERROR: money value cannot be left blank')
+            print('ERROR: money entry cannot be empty')
         get_money()
 
 
