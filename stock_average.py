@@ -49,6 +49,7 @@ def iterate_through_shares(money):
             shares = math.floor(money / stock.current_price)
         except TypeError:  # User clicked off screen during additional money question
             get_money()
+
         if shares is not 0:
             for new_shares_bought in range(1, (shares + 1)):
                 add_new_stock(new_shares_bought)
