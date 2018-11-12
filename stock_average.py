@@ -44,7 +44,11 @@ def iterate_through_shares(money):
 
     if not stock.crypto:
         # "How many shares you can buy today with that money?"
-        shares = math.floor(money / stock.current_price)
+        shares = 0
+        try:
+            shares = math.floor(money / stock.current_price)
+        except TypeError:  # User clicked off screen during additional money question
+            get_money()
         if shares is not 0:
             for new_shares_bought in range(1, (shares + 1)):
                 add_new_stock(new_shares_bought)
@@ -77,7 +81,10 @@ def get_money():
     """Retrieves dollar amount from user to gauge how much they are willing to spend"""
     money = input('How much additional money are you willing to spend?\n').strip().lower()
     try:
-        return abs(float(money))
+        output_money = abs(float(money))
+        if output_money is None:
+            get_money()
+        return output_money
     except ValueError:
         if money:
             print('ERROR:', money, 'must be valid number')
