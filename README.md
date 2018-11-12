@@ -15,8 +15,8 @@ A menu-driven system to help you create, modify, and display your stocks' averag
  - [Download](https://github.com/Mas9311/stock-average/archive/master.zip) this repo then open a command line window (Terminal) <br>
  <code>cd <local/path/above/stock-average-master.zip></code> <br>
  <code>unzip stock-average-master.zip</code> <br>
- <code>cd stock-average-master</code>
- <code>python3 stock-average.py</code>
+ <code>cd stock-average-master</code> <br>
+ <code>python3 stock_average.py</code>
 
 - - -
 
