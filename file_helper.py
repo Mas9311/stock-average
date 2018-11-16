@@ -1,5 +1,6 @@
 import menu
 import os
+import sys
 
 
 def get_folder():
@@ -97,9 +98,19 @@ def make_file(stock_symbol):
         new_file.close()
 
 
+def get_symbol():
+    if len(sys.argv) > 1:
+        symbol = sys.argv[1].strip().lower()
+        print('Attempting to retrieve the file for', symbol)
+    else:
+        symbol = input('What is the symbol of the stock?\n').strip().lower()
+    return symbol
+
+
 def get_parameters(stock_symbol):
     """Retrieves the stocks values from the input file.
     If the stock file does not exist, we will create one. """
+
     make_sure_dir_exists()
     while not file_exists(stock_symbol):
         make_file(stock_symbol)
@@ -111,6 +122,5 @@ def get_parameters(stock_symbol):
         lines[0] = bool(lines[0].strip())
         lines[1] = abs(float(lines[1].strip()))  # purchased price
         lines[2] = abs(float(lines[2].strip()))  # purchased quantity
-        if len(lines) > 3:
-            lines[3] = abs(float(lines[3]))  # current price
+        lines[3] = abs(float(lines[3]))  # current price
         return lines

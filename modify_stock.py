@@ -39,47 +39,49 @@ def modify_crypto(stock):
 def modify_shares(stock):
     print('You have selected to modify the current number of shares attribute')
     print('How many shares of', stock.symbol, 'do you currently have?')
-    validate_input(stock, 'purchased_quantity')
+    value = input().strip().lower()
+    validate_input(stock, 'purchased_quantity', value)
 
 
 def modify_average(stock):
     print('You have selected to modify your current average attribute')
     print('What is your current average of', stock.symbol, '?')
-    validate_input(stock, 'purchased_price')
+    value = input().strip().lower()
+    validate_input(stock, 'purchased_price', value)
 
 
 def modify_current(stock):
     print('You have selected to modify the current average attribute')
     print('What is the current price of', stock.symbol, '?')
-    validate_input(stock, 'current_price')
+    value = input().strip().lower()
+    validate_input(stock, 'current_price', value)
 
 
-def validate_input(stock, attribute):
+def validate_input(stock, attribute, value):
     """User has been asked the question, so retrieve their input.
     If it's not blank (after remove whitespace), and a number, and
     greater than zero, then update the stock's corresponding attribute"""
 
-    answer = input().strip().lower()
-    if answer:
+    if value:
         try:
-            answer = float(answer)
-            if answer < 0:
-                print('ERROR:', answer, 'must be a positive number (or 0)')
+            value = float(value)
+            if value < 0:
+                print('ERROR:', value, 'must be a positive number (or 0)')
             else:
-                update_stock(answer, stock, attribute)
+                update_stock(stock, attribute, value)
         except ValueError:
-            print('ERROR:', answer, 'is not a valid input')
+            print('ERROR:', value, 'is not a valid input')
     else:
         print('ERROR: your input must not be left blank on this one')
 
 
-def update_stock(answer, stock, attribute):
+def update_stock(stock, attribute, value):
     """Once the user gives a valid input to modify the stock, this is the
     function that actually modifies the given stock's corresponding value"""
 
     if attribute is 'purchased_quantity':
-        stock.purchased_quantity = answer
+        stock.purchased_quantity = value
     elif attribute is 'purchased_price':
-        stock.purchased_price = answer
+        stock.purchased_price = value
     elif attribute is 'current_price':
-        stock.current_price = answer
+        stock.current_price = value

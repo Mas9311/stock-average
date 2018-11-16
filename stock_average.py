@@ -1,16 +1,21 @@
 #!/usr/bin/python3
-
 import average
+import file_helper as helper
 import math
 import menu
+import modify_stock as mod
 import stock
-import file_helper as helper
+import sys
 
 
-#############################
-# Usage:                    #
-#  python3 stock_average.py #
-#############################
+#############################################################
+# Usage:                                                    #
+#                                                           #
+#  python3 stock_average.py                                 #
+#  python3 stock_average.py <stock_symbol>                  #
+#  python3 stock_average.py <stock_symbol> <current_price>  #
+#                                                           #
+#############################################################
 
 
 def add_new_stock(new_shares_bought):
@@ -120,11 +125,17 @@ def update_then_money():
 
 
 if __name__ == '__main__':
-    symbol = input('What is the symbol of the stock?\n').strip().lower()
+    symbol = helper.get_symbol()
     lines = helper.get_parameters(symbol)
 
     # Creates the class instance for the Stock
     stock = stock.Stock(lines, symbol.upper())
+
+    if len(sys.argv) >= 3:
+        value = sys.argv[2]  # current price
+        mod.validate_input(stock, 'current_price', value)
+        stock.update_formatting()
+        helper.modify_file(value, stock)
 
     # Creates the class instance for the Average
     average = average.Average(stock.purchased_price * stock.purchased_quantity, stock.purchased_quantity)
