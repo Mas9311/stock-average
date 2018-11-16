@@ -3,9 +3,7 @@ import average
 import file_helper as helper
 import math
 import menu
-import modify_stock as mod
 import stock
-import sys
 
 
 #############################################################
@@ -53,7 +51,7 @@ def iterate_through_shares(money):
         try:
             shares = math.floor(money / stock.current_price)
         except TypeError:  # User clicked off screen during additional money question
-            get_money()
+            calculate_money()
             return
 
         if shares is not 0:
@@ -69,7 +67,7 @@ def iterate_through_shares(money):
         try:
             iterations = int(math.sqrt(money))
         except TypeError:  # User clicked off screen during additional money question
-            get_money()
+            calculate_money()
             return
 
         # "How many shares can you buy in each iteration printed (in decimal)?"
@@ -104,7 +102,7 @@ def get_money():
             print('ERROR:', money_s, 'must be valid number')
         else:
             print('ERROR: money entry cannot be empty')
-        get_money()
+        calculate_money()
         return
 
 
@@ -131,11 +129,8 @@ if __name__ == '__main__':
     # Creates the class instance for the Stock
     stock = stock.Stock(lines, symbol.upper())
 
-    if len(sys.argv) >= 3:
-        value = sys.argv[2]  # current price
-        mod.validate_input(stock, 'current_price', value)
-        stock.update_formatting()
-        helper.modify_file(value, stock)
+    # Checks for an additional argument (current price)
+    helper.get_current_price(stock)
 
     # Creates the class instance for the Average
     average = average.Average(stock.purchased_price * stock.purchased_quantity, stock.purchased_quantity)

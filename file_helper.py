@@ -1,4 +1,5 @@
 import menu
+import modify_stock as mod
 import os
 import sys
 
@@ -18,9 +19,7 @@ def modify_file(answer, stock):
     selected to modify a given value of the stock"""
     lines = get_parameters(stock.symbol.lower())
 
-    if answer is 1:
-        lines[0] = stock.symbol.upper() + ' is a cryptocurrency!'
-    elif answer is 2:
+    if answer is 2:
         lines[1] = stock.purchased_price
     elif answer is 3:
         lines[2] = stock.purchased_quantity
@@ -29,7 +28,8 @@ def modify_file(answer, stock):
 
     with open(get_file(stock.symbol.lower()), 'w') as f:
         if stock.crypto:
-            f.write(lines[0])
+            crypto_string = stock.symbol.upper() + ' is a cryptocurrency!'
+            f.write(crypto_string)
         f.write('\n')
         f.write(repr(lines[1]) + '\n')
         f.write(repr(lines[2]) + '\n')
@@ -101,10 +101,23 @@ def make_file(stock_symbol):
 def get_symbol():
     if len(sys.argv) > 1:
         symbol = sys.argv[1].strip().lower()
-        print('Attempting to retrieve the file for', symbol)
-    else:
-        symbol = input('What is the symbol of the stock?\n').strip().lower()
+        try:
+            should_fail = float(symbol)
+            print('ERROR: First arg should be the stock\'s symbol, not the current price')
+        except ValueError:
+            print('Attempting to retrieve the file for', symbol)
+            return symbol
+
+    symbol = input('What is the symbol of the stock?\n').strip().lower()
     return symbol
+
+
+def get_current_price(stock):
+    if len(sys.argv) > 2:
+        value = sys.argv[2]  # current price
+        mod.validate_input(stock, 'current_price', value)
+        stock.update_formatting()
+        modify_file(4, stock)
 
 
 def get_parameters(stock_symbol):
