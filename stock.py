@@ -9,9 +9,9 @@ class Stock:
 
     '''If the first index in the file is empty, it is not a cryptocurrency'''
     def update_formatting(self):
-        if repr(self.purchased_quantity).find('.0') is not -1:
-            self.purchased_quantity = int(self.purchased_quantity)
         self.crypto = bool(self.crypto)
+        if repr(self.purchased_quantity).find('.0') is not -1 and not self.crypto:
+            self.purchased_quantity = int(self.purchased_quantity)
 
     '''Return the price in currency format with a decimal precion of 2 or 8, depending
     on if it is a regular stock or a cryptocurrency'''

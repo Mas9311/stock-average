@@ -4,7 +4,7 @@ import average
 import math
 import menu
 import stock
-import file_helper as h
+import file_helper as helper
 
 
 #############################
@@ -49,6 +49,7 @@ def iterate_through_shares(money):
             shares = math.floor(money / stock.current_price)
         except TypeError:  # User clicked off screen during additional money question
             get_money()
+            return
 
         if shares is not 0:
             for new_shares_bought in range(1, (shares + 1)):
@@ -57,9 +58,14 @@ def iterate_through_shares(money):
             print('Unfortunately, that\'s not enough to buy a share.')
             print('Try again, but increase the money this time', end='\n\n')
             update_then_money()
+            return
     else:
         # "How many iterations are we going to print to console?"
-        iterations = int(math.sqrt(money))
+        try:
+            iterations = int(math.sqrt(money))
+        except TypeError:  # User clicked off screen during additional money question
+            get_money()
+            return
 
         # "How many shares can you buy in each iteration printed (in decimal)?"
         price_per_iter = money / iterations
@@ -94,6 +100,7 @@ def get_money():
         else:
             print('ERROR: money entry cannot be empty')
         get_money()
+        return
 
 
 def calculate_money():
@@ -114,7 +121,7 @@ def update_then_money():
 
 if __name__ == '__main__':
     symbol = input('What is the symbol of the stock?\n').strip().lower()
-    lines = h.get_parameters(symbol)
+    lines = helper.get_parameters(symbol)
 
     # Creates the class instance for the Stock
     stock = stock.Stock(lines, symbol.upper())
@@ -122,5 +129,5 @@ if __name__ == '__main__':
     # Creates the class instance for the Average
     average = average.Average(stock.purchased_price * stock.purchased_quantity, stock.purchased_quantity)
 
-    # "Do you want to update the stock?" -- "How much money are you willing tp spend?"
+    # "Do you want to update the stock?" --> "How much money are you willing to spend?"
     update_then_money()

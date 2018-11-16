@@ -18,7 +18,7 @@ def switcher(answer, stock):
         modify_current(stock)
 
     stock.update_formatting()
-    helper.modify_file(stock)
+    helper.modify_file(answer, stock)
 
 
 def modify_crypto(stock):
@@ -27,6 +27,10 @@ def modify_crypto(stock):
     menu.print_y_or_n('indicate that it a cryptocurrency', 'indicate that it is a regular stock')
     answer = input().strip().lower()
     stock.crypto = bool(answer)
+
+    # Re-read stock.purchased_quantity from file
+    if stock.crypto is True:
+        helper.read_shares_from_file(stock)
 
     additional = '' if stock.crypto else ' NOT'
     print('You have indicated that', stock.symbol, 'is' + additional, 'a cryptocurrency', end='\n\n')

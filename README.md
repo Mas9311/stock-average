@@ -35,7 +35,8 @@ Shares are pretty simple to find the mean, since they are whole numbers. Here's 
 ### Crypto ###
 
 Cryptocurrencies have been around for a while now, but it's never too late to think about alternaive investments. <br>
-The only hold up for crypto averaging is you don't need to purchased shares in increments of whole numbers. <br>
+Crypto averaging is a little more challenging, as you don't need to purchased coins in increments of whole numbers. <br>
+Here's the scenario: <br>
   - You purchased a fraction of a coin at a higher price and the price has lowered since then. 
-  - You now want to find what you would be averaging if you spent additional money today and see if your avergage would be lowered.
-    - It's the same formula as stated in the Shares section, but you want to keep the decimals with a precision of 8.
+  - You now want to find what you would be averaging if you spent additional money today in order to see if your average would be lowered.
+    - It's the same formula as stated in the Shares section, but we want to maintains a decimal-precision of 8.
