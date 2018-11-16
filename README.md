@@ -6,14 +6,14 @@ A menu-driven system to help you create, modify, and display your stocks' averag
 
 ## Requirements ##
 
-* [Python 3.x](https://www.python.org/downloads/) <br>
-* \*nix-based OS in the command-line interface <br>
+* A \*nix-based OS in order to use the command-line interface (Terminal) <br>
+* [Python 3.x](https://www.python.org/downloads/), but I recommend adding via your package manager (brew, apt, etc) <br>
 
 ## Usage ##
  - Linux users should download the package <code>unzip</code> with:<br>
  <code>sudo apt-get install unzip</code> <br><br>
  - [Download](https://github.com/Mas9311/stock-average/archive/master.zip) this repo then open a command line window (Terminal) <br>
- <code>cd <local/path/above/stock-average-master.zip></code> <br>
+ <code>cd <local/path/ABOVE/stock-average-master.zip></code> <br>
  <code>unzip stock-average-master.zip</code> <br>
  <code>cd stock-average-master</code> <br>
  <code>python3 stock_average.py</code>
@@ -39,4 +39,4 @@ Crypto averaging is a little more challenging, as you don't need to purchased co
 Here's the scenario: <br>
   - You purchased a fraction of a coin at a higher price and the price has lowered since then. 
   - You now want to find what you would be averaging if you spent additional money today in order to see if your average would be lowered.
-    - It's the same formula as stated in the Shares section, but we want to maintains a decimal-precision of 8.
+    - It's the same formula as stated in the Shares section, but we want to maintain a decimal-precision of 8.
