@@ -12,7 +12,7 @@ A menu-driven system to help you create, modify, and display your stocks' averag
 ## Usage ##
  - Linux users should download the package <code>unzip</code> with:<br>
  <code>sudo apt-get install unzip</code> <br><br>
- - [Download](https://github.com/Mas9311/stock-average/archive/master.zip) this repo then open a command line window (Terminal) <br>
+ - [Download](https://github.com/Mas9311/stock-average/archive/v1.0.zip) this repo then open a command line window (Terminal) <br>
  <code>cd <local/path/ABOVE/stock-average-1.0.zip></code> <br>
  <code>unzip stock-average-1.0.zip</code> <br>
  <code>cd stock-average-1.0</code> <br>
