@@ -10,13 +10,16 @@ A menu-driven system to help you create, modify, and display your stocks' averag
 * [Python 3.x](https://www.python.org/downloads/), but I recommend adding via your package manager (brew, apt, etc) <br>
 
 ## Usage ##
- - Linux users should download the package <code>unzip</code> with:<br>
- <code>sudo apt-get install unzip</code> <br><br>
- - [Download](https://github.com/Mas9311/stock-average/archive/v1.0.zip) this repo then open a command line window (Terminal) <br>
- <code>cd <local/path/ABOVE/stock-average-1.0.zip></code> <br>
- <code>unzip stock-average-1.0.zip</code> <br>
- <code>cd stock-average-1.0</code> <br>
- <code>python3 stock_average.py</code>
+ (optional) Linux users should download the package <code>unzip</code> with:<br>
+1. <code>sudo apt-get install unzip</code> <br><br>
+1. [Download](https://github.com/Mas9311/stock-average/archive/v1.0.zip) this repo then open a command line window (Terminal) <br>
+1. <code>cd <local/path/ABOVE/stock-average-1.0.zip></code> <br>
+1. <code>unzip stock-average-1.0.zip</code> <br>
+1. <code>cd stock-average-1.0</code> <br>
+1. <code>python3 stock_average.py</code>
+ * Can have additional arguments of stock_symbol current_price such as:
+   * python3 stock_average.py btc
+   * python3 stock_average.py btc 5190.85
 
 - - -
 
