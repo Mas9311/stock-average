@@ -1,6 +1,9 @@
-# Average Stock #
+Compute your Stock's Average
+============================
 
-A simple menu-driven program to display a given stock's average *if* you were to buy additional shares today and assists you in the creation and modification of stock_symbol files. 
+[![image](https://img.shields.io/badge/python-3.x-blue.svg)](https://www.python.org/downloads/)
+
+A simple menu-driven program to display your stock's average *if* you were to buy additional shares today and assists you in the creation and modification of stock_symbol files. 
 
 ## Requirements ##
 
