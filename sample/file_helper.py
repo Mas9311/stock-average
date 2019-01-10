@@ -1,4 +1,4 @@
-from sample import menu, modify_stock
+from sample import format, menu, modify_stock
 import os
 import sys
 
@@ -16,17 +16,14 @@ def get_file(stock_symbol):
 def modify_file(my_stock, selection):
     """This function is called once the user has selected to modify a given value of the stock."""
     lines = get_parameters(my_stock.get_symbol().lower())
-    if selection == 'crypto':
-        lines[0] = f'{my_stock.get_symbol()} is a cryptocurrency!' if my_stock.crypto else ''
-    elif selection == 'purchased average':
+    if selection == f'crypto':
+        lines[0] = f'{my_stock.get_symbol()} is a cryptocurrency!' if my_stock.crypto else f''
+    elif selection == f'purchased average':
         lines[1] = my_stock.purchased_average
-    elif selection == 'purchased quantity':
+    elif selection == f'purchased quantity':
         lines[2] = my_stock.purchased_quantity
-    elif selection == 'current price':
+    elif selection == f'current price':
         lines[3] = my_stock.current_price
-    else:
-        print(f'The file was not modified...')
-        return
 
     with open(get_file(my_stock.symbol.lower()), 'w') as f:
         f.write(f'{lines[0]}\n')
@@ -34,11 +31,11 @@ def modify_file(my_stock, selection):
         f.write(f'{repr(lines[2])}\n')
         f.write(f'{repr(lines[3])}\n')
         f.close()
-    print(f'The {my_stock.symbol} file was updated.')
+    print(f'The file, {my_stock.symbol}, has been updated.\n')
 
 
 def make_sure_dir_exists():
-    """Create the symbols folder if it does not exist."""
+    """Creates the symbols folder if it does not exist."""
     symbols = get_folder()
     if not os.path.exists(symbols):
         os.mkdir(symbols)
@@ -47,12 +44,11 @@ def make_sure_dir_exists():
 
 def reread_quantity(my_stock):
     """Called when a file is modified from 'is not a crypto' -> 'is a crypto'.
-    Retrieves the purchased_quantity from the file."""
+    Retrieves the purchased_quantity from the file for decimal precision purposes."""
     with open(get_file(my_stock.symbol), 'r') as f:
         lines = f.read().splitlines()
         f.close()
-        my_stock.purchased_quantity = float(lines[2])
-    print('The purchased quantity has been reread from file.')
+        my_stock.purchased_quantity = format.best(float(lines[2]), my_stock.precision)
 
 
 def file_exists(stock_symbol):
@@ -71,25 +67,25 @@ def file_exists(stock_symbol):
                     return p_price >= 0 and p_quantity >= 0 and c_price >= 0
                 except ValueError:
                     print(f'Invalid: One of the non-crypto lines in the {stock_symbol} file is not a number.')
+                    print(f'The invalid file is being removed. Starting with a clean file.')
                     os.remove(file_path)
-                    print(f'Starting with a clean file.')
     return False
 
 
 def make_file(stock_symbol):
     """The stock file does not currently exist in the folder.
     We will now make one so you can use it again later."""
-    print(stock_symbol, 'file is not in the symbols folder, so we\'ll make it now.', end='\n\n')
+    print(f'The {stock_symbol} file is not in the symbols folder, so we will make it now.\n\n')
     file_path = get_file(stock_symbol)
     stock_symbol = stock_symbol.upper()
     with open(file_path, 'w') as new_file:
         print(f'Is {stock_symbol} a cryptocurrency?')
-        crypto_answer = menu.y_or_n('save it is a cryptocurrency',
-                                    'save it as a regular stock')
+        crypto_answer = menu.y_or_n(f'save it is a cryptocurrency',
+                                    f'save it as a regular stock')
         if crypto_answer:
             new_file.write(f'{stock_symbol} is a cryptocurrency!')
         new_file.write('\n')
-        type_of = 'share' if not crypto_answer else 'coin'
+        type_of = f'share' if not crypto_answer else f'coin'
         shares = input(f'How many {type_of}s of {stock_symbol} have you purchased?\n').strip()
         new_file.write(input(f'What is your current average of {stock_symbol}?\n').strip().lower() + '\n')
         new_file.write(f'{shares}\n')
@@ -104,16 +100,15 @@ def get_symbol():
             float(symbol)  # This should fail, thus will be correctly 'caught'
             print(f'Invalid: First arg should be the stock\'s symbol, not the current price.')
         except ValueError:
-            print(f'Attempting to retrieve the {symbol} file.')
+            return symbol
     else:
-        symbol = input(f'What is the symbol of the stock or cryptocurrency?\n').strip().lower()
-    return symbol
+        return input(f'What is the symbol of the stock or cryptocurrency?\n').strip().lower()
 
 
 def get_current_price(my_stock):
     if len(sys.argv) >= 3:
         value = sys.argv[2]  # current price
-        modify_stock.validate_input(my_stock, 'current_price', value)
+        modify_stock.validate_input(my_stock, f'current_price', value)
         my_stock.update_quantity_format()
         modify_file(my_stock, 'current price')
 

@@ -1,26 +1,25 @@
-from . import currency
+from . import format
 
 
 class NewOutcome:
-    def __init__(self, crypto, potential_index, potential_cost, potential_average):
-        self.crypto = None
-        self.precision = 0
-        self.type_of = ''
-        self.update_crypto(bool(crypto))
+    def __init__(self, my_allotted, potential_index, potential_cost, potential_average):
+        self.symbol = my_allotted.symbol
+        self.crypto = my_allotted.crypto
+        self.precision = my_allotted.precision
+        self.type_of = my_allotted.type_of
 
         self.index = int(potential_index)
         self.cost = potential_cost
         self.average = float(potential_average)
 
-    def update_crypto(self, is_crypto):
-        self.crypto = is_crypto
-        self.precision = 8 if self.crypto else 3
-        self.type_of = 'coin' if self.crypto else 'share'
+    def update_crypto(self, my_allotted):
+        self.crypto = my_allotted.crypto
+        self.precision = my_allotted.precision
+        self.type_of = my_allotted.type_of
 
     def __str__(self):
         if not self.crypto:
-            iter_str = currency.multiple(self.index, "additional ", self.type_of)
+            type_str = f'buying {format.multiple(self.index, "additional ", self.type_of)}'
         else:
-            iter_str = f'{currency.price(self.cost, self.precision)} worth of coins'
-        return(f'After buying {iter_str}, your new average would be {currency.price(self.average, self.precision)}\n'
-               f'\tafter spending {currency.price(self.cost, 2)} today.\n\n')
+            type_str = f'spending {format.price(self.cost, 2)}'
+        return f'After {type_str}, your new average would be {format.price(self.average, self.precision)}.\n'

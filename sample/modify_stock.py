@@ -31,8 +31,7 @@ def modify_crypto(my_stock, selection):
                                             'indicate that it is a regular stock')))
     file_helper.reread_quantity(my_stock)
     additional = '' if my_stock.crypto else ' not'
-    print(f'You have just indicated that {my_stock.get_symbol()} is{additional} a cryptocurrency.\n')
-    my_stock.update_quantity_format()
+    print(f'You have just indicated that {my_stock.get_symbol()} is{additional} a cryptocurrency.')
     file_helper.modify_file(my_stock, selection)
 
 
