@@ -34,4 +34,4 @@ class Average:
 
     def __str__(self):
         """Returns the potential average in string format."""
-        return f'${format.price(self.retrieve_average(), self.precision)}'
+        return format.price(self.retrieve_average(), self.precision)

@@ -37,14 +37,11 @@ class ActionTaken:
         new_outcome = potential.NewOutcome(self, index, potential_cost, potential_average)
         self.selections.append(new_outcome)
 
-    # def clear_list(self):
-    #     self.selections.clear()
-
     def __str__(self):
         """Returns the potential averages as a string."""
         output = f''
         for curr in self.selections:
             output += str(curr)
-        return(f'For {self.symbol.upper()}, the potential averages will be calculated in {self.iterations} '
+        return(f'\nFor {self.symbol.upper()}, the potential averages will be calculated in {self.iterations} '
                f'increments of {format.price(self.cost_per, self.precision)} each iteration.\n\n'
                f'{output}')

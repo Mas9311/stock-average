@@ -1,4 +1,4 @@
-from sample import file_helper, menu
+from sample import file_helper, format, menu
 
 
 def switcher(selection, my_stock):
@@ -6,7 +6,7 @@ def switcher(selection, my_stock):
     which value the the user wishes to modify.
     It then updates the formatting of the stock
     and writes the new changes to the given stock's file"""
-    print(f'You have selected to modify the {selection} attribute.\n')
+    print(format.feedback(False, f'You have selected to modify the {selection} attribute.'))
     if selection == 'crypto':
         modify_crypto(my_stock, selection)
         return
@@ -14,24 +14,21 @@ def switcher(selection, my_stock):
         value = input(f'What is your {selection} of {my_stock.get_symbol()}?\n').strip().lower()
     elif selection == 'purchased quantity':
         value = input(f'How many {my_stock.type_of}s of {my_stock.get_symbol()} '
-                      f'do you currently have?\n').strip().lower()
-        my_stock.update_quantity_format()
+                      f'do you currently own?\n').strip().lower()
     elif selection == 'current price':
         value = input(f'What is the current price of {my_stock.get_symbol()}?\n').strip().lower()
     else:
-        print('Nothing was modified in the object...')
+        print(format.feedback(False, f'The {my_stock.get_symbol()} was not modified...'))
         return
     validate_input(my_stock, selection, value)
     file_helper.modify_file(my_stock, selection)
 
 
 def modify_crypto(my_stock, selection):
-    print(f'Is {my_stock.get_symbol()} a cryptocurrency?')
-    my_stock.update_crypto(bool(menu.y_or_n('indicate that it a cryptocurrency',
-                                            'indicate that it is a regular stock')))
+    my_stock.update_crypto(bool(menu.y_or_n(f'Is {my_stock.get_symbol()} a cryptocurrency?',
+                                            f'save it as a cryptocurrency',
+                                            f'save it as a regular stock')))
     file_helper.reread_quantity(my_stock)
-    additional = '' if my_stock.crypto else ' not'
-    print(f'You have just indicated that {my_stock.get_symbol()} is{additional} a cryptocurrency.')
     file_helper.modify_file(my_stock, selection)
 
 
@@ -43,13 +40,13 @@ def validate_input(my_stock, selection, value):
         try:
             value = float(value)
             if value < 0:
-                print(f'Invalid: \'{value}\' must a valid, positive number.')
+                print(format.feedback(True, f'\'{value}\' is not a valid, positive number.'))
             else:
                 valid_update(my_stock, selection, value)
         except ValueError:
-            print(f'Invalid: \'{value}\' is not a valid, positive number.')
+            print(format.feedback(True, f'\'{value}\' is not a valid, positive number.'))
     else:
-        print(f'Invalid: input cannot not be left blank.')
+        print(format.feedback(True, f'The input cannot not be left blank.'))
 
 
 def valid_update(my_stock, selection, value):
@@ -61,7 +58,4 @@ def valid_update(my_stock, selection, value):
         my_stock.purchased_quantity = value
     elif selection == 'current price':
         my_stock.current_price = value
-    else:
-        print(f'The {my_stock.symbol} object was not modified...')
-        return
-    print(f'The {my_stock.symbol} object was updated to reflect the new {selection} of {value}.')
+    # print(f'The {my_stock.symbol} object was updated to reflect the new {selection} of {value}.')

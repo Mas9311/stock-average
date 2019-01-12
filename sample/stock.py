@@ -17,6 +17,7 @@ class Stock:
 
         self.average = average.Average(self)
         self.allotted = None
+        print()
 
     def set_purchased(self, price_str, quantity_str):
         """Helper method that sets the purchased_{average, quantity} correctly."""
@@ -31,8 +32,9 @@ class Stock:
             try:
                 return format.normalize(float(output))
             except ValueError:
-                print(f'Invalid: The purchased {purchased_type} of \'{output}\' cannot be converted properly.')
-                output = input(f'Please input a valid purchased {purchased_type}: ').strip()
+                output = input(format.feedback(True, [f'The purchased {purchased_type} of \'{output}\' '
+                                                      f'cannot be converted properly.',
+                                                      f'Please input a valid purchased {purchased_type}.'])).strip()
 
     def update_crypto(self, is_crypto):
         """Updates the crypto variable and everything else including the objects within this object."""
@@ -64,8 +66,7 @@ class Stock:
 
     def __str__(self):
         """Returns the stock in string format."""
-        print_crypto = ', the cryptocurrency' if self.crypto else ''
-        return (f'\n{self.get_symbol()}{print_crypto}:\n'
-                f'\tYou previously purchased {format.multiple(self.purchased_quantity, "", self.type_of)},\n'
+        return (f'{self.get_symbol()}{", the cryptocurrency" if self.crypto else ""}:\n'
+                f'\tYou previously purchased  {format.multiple(self.purchased_quantity, "", self.type_of)},\n'
                 f'\twith a current average of {format.price(self.purchased_average, self.precision)}\n'
                 f'\twith the current price at {format.price(self.current_price, self.precision)}\n')
