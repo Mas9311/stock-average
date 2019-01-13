@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 from sample import stock_average
 
 if __name__ == '__main__':

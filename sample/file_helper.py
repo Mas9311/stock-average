@@ -31,7 +31,7 @@ def modify_file(my_stock, selection):
         f.write(f'{repr(lines[2])}\n')
         f.write(f'{repr(lines[3])}\n')
         f.close()
-    print(format.feedback(False, f'{my_stock.get_symbol()} has been updated.'))
+    print(format.Feedback(False, f'{my_stock.get_symbol()} has been updated.'))
 
 
 def make_sure_dir_exists():
@@ -39,7 +39,7 @@ def make_sure_dir_exists():
     symbols = get_folder()
     if not os.path.exists(symbols):
         os.mkdir(symbols)
-        print(format.feedback(False, f'Created the symbols folder.'))
+        print(format.Feedback(False, f'Created the symbols folder.'))
 
 
 def reread_quantity(my_stock):
@@ -66,7 +66,7 @@ def file_exists(stock_symbol):
                     c_price = float(lines[3])
                     return p_price >= 0 and p_quantity >= 0 and c_price >= 0
                 except ValueError:
-                    print(format.feedback(True, [f'One of the non-crypto lines in the {stock_symbol} '
+                    print(format.Feedback(True, [f'One of the non-crypto lines in the {stock_symbol} '
                                                  f'file is not a number.',
                                                  f'The file, {stock_symbol} has been removed.',
                                                  f'We will recreate the {stock_symbol} file now.']))
@@ -100,7 +100,7 @@ def get_symbol():
         symbol = sys.argv[1].strip().lower()
         try:
             float(symbol)  # This should fail, meaning correct arguments given
-            print(format.feedback(True, f'First arg should be the symbol, not the current price.'))
+            print(format.Feedback(True, f'First arg should be the symbol, not the current price.'))
         except ValueError:
             return symbol
     else:

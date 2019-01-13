@@ -1,44 +1,58 @@
-def feedback(is_invalid, information):
-    default_length = 2 + 14 + 2
+class Feedback:
+    """Creates a border wall around the message so the user can notice messages easier.
+    If the is_invalid """
+    def __init__(self, is_invalid, information):
+        self.is_invalid = is_invalid
+        self.information = information
+        self.indent = '  ' if self.is_invalid else ''
+        self.width = 2 + 14 + 2
+        self.vert_border_char = '*' if self.is_invalid else '║'
 
-    if type(information) is list:
-        num_asterisks = max(default_length, max([len(each_line) for each_line in information]) + 6)
-        information_str = f''  # if information isa <list>, blank it out
-        for i in range(len(information)):
-            information_str += f'{spacing("  " + information[i], num_asterisks)}'
-            information_str += f'\n' if i is not len(information) - 1 else ''
-    else:
-        num_asterisks = max(default_length, len(information) + 6)
-        information_str = spacing('  ' + information, num_asterisks)
+    def create_border_line(self, is_top):
+        first_char = '*'
+        last_char = '*'
+        horizontal_border_char = '*'
+        output = ''
+        if not self.is_invalid:
+            horizontal_border_char = '═'
+            if is_top:
+                first_char = '╔'
+                last_char = '╗'
+            else:
+                first_char = '╚'
+                last_char = '╝'
+        for _ in range(self.width - 2):
+            output += horizontal_border_char
+        return f'{first_char}{output}{last_char}'
 
-    invalid_str = spacing(f'Invalid entry:', num_asterisks) + '\n' if is_invalid else f''
-    asterisks_line = f''
-    output = (f'{invalid_str}'
-              f'{information_str}')
-    for i in range(num_asterisks):
-        asterisks_line += f'*'
+    def spacing(self, information_line):
+        ending_spaces = ''
+        num_spaces = self.width - 4 - len(information_line)
+        for _ in range(num_spaces):
+            ending_spaces += ' '
+        return f'{self.vert_border_char} {information_line}{ending_spaces} {self.vert_border_char}'
 
-    return (f'\n\n{asterisks_line}\n'
-            f'{output}\n'
-            f'{asterisks_line}\n\n')
+    def __str__(self):
+        information_str = f''
+        padding = 6 if self.indent else 4
+        if type(self.information) is list:
+            self.width = max(2 + 14 + 2, max([len(each_line) for each_line in self.information]) + padding)
+            for i in range(len(self.information)):
+                information_str += f'{self.spacing(self.indent + self.information[i])}'
+                information_str += f'\n' if i is not len(self.information)-1 else ''
+        else:
+            self.width = max(self.width, len(self.information) + padding)
+            information_str = f'{self.spacing(self.indent + self.information)}'
 
+        invalid_str = self.spacing('Invalid entry:') + '\n' if self.is_invalid else ''
+        top_border_line = self.create_border_line(True)
+        bot_border_line = self.create_border_line(False)
+        output = (f'{invalid_str}'
+                  f'{information_str}')
 
-def spacing(information, line_len):
-    spaces = f''
-    num_spaces = line_len - 4 - len(information)
-    for _ in range(num_spaces):
-        spaces += f' '
-    return f'* {information}{spaces} *'
-
-
-# print(feedback(True, ['Today I learned that not one actually cares', 'Two']))
-# print(feedback(False, ['Today I learned that not one actually cares', 'Two']))
-# print(feedback(True, 'Today I learned that not one actually cares'))
-# print(feedback(False, 'Today I learned that not one actually cares'))
-# print(feedback(True, ['One', 'Two']))
-# print(feedback(False, ['One', 'Two']))
-# print(feedback(True, 'One'))
-# print(feedback(False, 'One'))
+        return (f'\n\n{top_border_line}\n'
+                f'{output}\n'
+                f'{bot_border_line}\n\n')
 
 
 def price(money, precision):

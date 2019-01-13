@@ -1,5 +1,5 @@
 import math
-from . import additional, average, format, file_helper
+from . import average, format, file_helper
 
 
 class Stock:
@@ -10,31 +10,12 @@ class Stock:
         self.precision = 8 if self.crypto else 3
         self.type_of = 'coin' if self.crypto else 'share'
 
-        self.purchased_average = 0.00
-        self.purchased_quantity = 0
-        self.set_purchased(file_lines[1], file_lines[2])
+        self.purchased_average = format.normalize(float(file_lines[1]))
+        self.purchased_quantity = format.normalize(float(file_lines[2]))
         self.current_price = file_lines[3]
 
         self.average = average.Average(self)
         self.allotted = None
-        print()
-
-    def set_purchased(self, price_str, quantity_str):
-        """Helper method that sets the purchased_{average, quantity} correctly."""
-        self.purchased_average = Stock.retrieve_purchased('average', price_str)
-        self.purchased_quantity = Stock.retrieve_purchased('quantity', quantity_str)
-
-    @staticmethod
-    def retrieve_purchased(purchased_type, value_str):
-        """Returns the normalized If the string cannot be converted to a float, retrieve a valid input."""
-        output = value_str
-        while True:
-            try:
-                return format.normalize(float(output))
-            except ValueError:
-                output = input(format.feedback(True, [f'The purchased {purchased_type} of \'{output}\' '
-                                                      f'cannot be converted properly.',
-                                                      f'Please input a valid purchased {purchased_type}.'])).strip()
 
     def update_crypto(self, is_crypto):
         """Updates the crypto variable and everything else including the objects within this object."""
@@ -50,7 +31,7 @@ class Stock:
         """For stocks, increments are set to the current price.
         For crypto, increments do not need to be in whole coins, so square root(money)."""
         cost_per = math.sqrt(allotted_money) if self.crypto else self.current_price
-        self.allotted = additional.ActionTaken(self, allotted_money, cost_per)
+        self.allotted = AllottedMoney(self, allotted_money, cost_per)
 
     def get_allotted(self):
         """Returns the allotted money that the user is willing to spend today."""
@@ -70,3 +51,54 @@ class Stock:
                 f'\tYou previously purchased  {format.multiple(self.purchased_quantity, "", self.type_of)},\n'
                 f'\twith a current average of {format.price(self.purchased_average, self.precision)}\n'
                 f'\twith the current price at {format.price(self.current_price, self.precision)}\n')
+
+
+class AllottedMoney:
+    def __init__(self, my_stock, money, cost_per):
+        self.symbol = my_stock.get_symbol()
+        self.crypto = my_stock.crypto
+        self.precision = my_stock.precision
+        self.type_of = my_stock.type_of
+
+        self.allotted_money = money
+        self.iterations = int(self.allotted_money / cost_per)
+        self.cost_per = self.allotted_money / self.iterations if self.crypto else my_stock.current_price
+        self.selections = []
+
+    def update_crypto(self, my_stock):
+        """Updates the crypto variable and everything else that depends on it."""
+        self.crypto = my_stock.crypto
+        self.precision = my_stock.precision
+        self.type_of = my_stock.type_of
+        for each in self.selections:
+            each.update_crypto(self)
+
+    def set_allotted(self, money, cost_per):
+        self.allotted_money = money
+        self.cost_per = cost_per
+        self.iterations = self.allotted_money // cost_per
+
+    def get_allotted(self):
+        """Returns the allotted money that the user is willing to spend today."""
+        return self.allotted_money
+
+    def get_iterations(self):
+        """Returns how many potential averages to be calculated using the allotted money."""
+        return self.iterations
+
+    def add_outcome(self, index, potential_cost, potential_average):
+        new_outcome = average.PotentialOutcome(self, index, potential_cost, potential_average)
+        self.selections.append(new_outcome)
+
+    def __str__(self):
+        """Returns the potential averages as a string."""
+        output = '\n'
+        for current_potential in self.selections:
+            if current_potential is not self.selections[-1]:
+                output += str(current_potential) + '\n'
+            else:
+                output += str(self.selections[-1])
+
+        return(f'For {self.symbol.upper()}, the potential averages will be calculated in {self.iterations} '
+               f'increments of {format.price(self.cost_per, self.precision)} each iteration.\n'
+               f'{output}')

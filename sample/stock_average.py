@@ -5,6 +5,7 @@ def run():
     """This method is the main driver of the program that calls everything else."""
     while True:  # user wants to switch to a 'different' symbol from the user
         my_stock = stock.Stock()
+        print('', end='\n')
         file_helper.get_current_price(my_stock)
         while True:  # user wants to continue using the 'same' symbol
             menu.update(my_stock)
@@ -12,8 +13,9 @@ def run():
             allotted_money = retrieve_money()
             my_stock.set_allotted(allotted_money)
             calculate_allotted(my_stock)
-            print(f'Your current average is {original_avg}.\n\n'
-                  f'{my_stock.allotted}')
+
+            print(my_stock.allotted)
+            print(f'{format.Feedback(False, f"Compared to your current average of {original_avg}")}')
 
             ending_input = menu.ending_menu(my_stock.get_symbol())
             if ending_input is 'quit':
@@ -28,16 +30,17 @@ def retrieve_money():
     """Retrieves the user's allotted money they are willing to spend at the current price specified."""
     while True:
         user_input = input(f'How much money are you willing to spend today?\n').strip()
+        print('', end='\n')
         try:
             money = float(user_input)
-            if money < 0:
+            if money < 1:
                 pass
             else:
-                return money  # The only way to return is with a valid, non-zero, positive number
+                return money  # The only way to return is with a valid positive number >= !$
         except ValueError:
             pass
-        print(format.feedback(True, [f'An input of \'{user_input}\' cannot be accepted.',
-                                     f'The allotted money must be a valid, non-zero, positive number.']))
+        print(format.Feedback(True, [f'An input of \'{user_input}\' cannot be accepted.',
+                                     f'The allotted money must be a valid positive number >= {format.price(1, 2)}.']))
 
 
 def calculate_allotted(my_stock):
@@ -46,9 +49,12 @@ def calculate_allotted(my_stock):
     while True:
         iterations = int(my_stock.allotted.iterations)
         if iterations <= 0:
-            print(format.feedback(True, [f'{my_stock.allotted.allotted_money} is not enough to calculate.',
-                                         f'Please designate a number over '
-                                         f'{format.price(1, 2) if my_stock.crypto else my_stock.allotted.cost_per}.']))
+            if my_stock.crypto:
+                greater_than = format.price(1, 2)
+            else:
+                greater_than = format.price(my_stock.allotted.cost_per, my_stock.precision)
+            print(format.Feedback(True, [f'{my_stock.allotted.allotted_money} is not enough to calculate a potential.',
+                                         f'Please input a number >= {greater_than}.']))
             my_stock.set_allotted(retrieve_money())
         else:
             break

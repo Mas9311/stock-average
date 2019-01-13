@@ -37,11 +37,11 @@ def update(my_stock):
                 if 1 <= selection <= 4:
                     # The only way to continue is with a valid number between 1 and 4
                     break
-                print(format.feedback(True, f'\'{selection}\' must be an option between 1 and 4.'))
+                print(format.Feedback(True, f'\'{selection}\' must be an option between 1 and 4.'))
             except ValueError:
-                print(format.feedback(True, f'The selection is not a valid number.'))
+                print(format.Feedback(True, f'The selection is not a valid number.'))
             except IndexError:
-                print(format.feedback(True, f'The selection cannot be left blank.'))
+                print(format.Feedback(True, f'The selection cannot be left blank.'))
         modify_stock.switcher(convert_selection_update(selection), my_stock)
 
 
@@ -59,11 +59,11 @@ def convert_selection_update(answer):
 
 def ending_menu(symbol):
     """Prints the final menu to determine what the user wants to do now."""
-    if not y_or_n(f'\n\n\nDo you wish to continue or exit?',
+    if not y_or_n(f'Do you wish to continue or exit?',
                   f'continue finding averages',
                   f'exit the program'):
         return f'quit'
-    if not y_or_n(f'\n\n\nDo you want to choose another symbol or continue with {symbol}?',
+    if not y_or_n(f'Do you want to choose another symbol or continue with {symbol}?',
                   f'choose a different symbol',
                   f'continue with {symbol}'):
         return f'same'
