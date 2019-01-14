@@ -9,7 +9,7 @@ Note: the **symbols/** folder will be created to store each of your entries so y
 
 1. [Download this repo](https://github.com/Mas9311/stock-average/archive/v1.1.zip), and open a Terminal window.<br>
 1. <code>unzip</code> the <code>stock-average-1.1.zip</code> file from your downloads.<br>
-1. <code>cd</code> into the innermost <code>stock-average-1.1/</code> folder, where an <code>ls</code> would display <code>run.py</code><br>
+1. <code>cd</code> into the <code>stock-average-1.1/</code> folder, where an <code>ls</code> would display <code>run.py</code><br>
   - To run the program, enter <code>python3 run.py</code><br>
   - If you want parameters, the first is the symbol followed by the optional current_price, such as:<br>
     * <code>python3 run.py btc</code>
