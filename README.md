@@ -1,42 +1,44 @@
-# Stock Average #
+# Compute Your Potential Average #
+
+[![image](https://img.shields.io/badge/python-3.x-blue.svg)](https://www.python.org/downloads/)
 
 A simple menu-driven program to display your potential averages *if* you were to buy additional shares or coins today.<br>
-\* This program creates a *symbols* folder and store each of your stock or coin entries for reuse! \*
-
-### Requirements ###
-
-  * A command-line interface (Linux and Mac comes with Terminal by default)
-  * [Python 3.x](https://www.python.org/downloads/)
+Note: the **symbols/** folder will be created to store each of your entries so you can reuse them later.
 
 ## Usage ##
 
-1. [Download this repo](https://github.com/Mas9311/stock-average/archive/v1.0.zip), and open a Terminal window<br>
-1. unzip the new <code>stock-average-1.0.zip</code> folder<br>
-1. <code>cd stock-average-1.0</code><br>
-1. <code>python3 run.py</code>
-     * python3 run.py btc
-     * python3 run.py btc 3807.25
+1. [Download this repo](https://github.com/Mas9311/stock-average/archive/v1.1.zip), and open a Terminal window.<br>
+1. <code>unzip</code> the <code>stock-average-1.1.zip</code> file from your downloads.<br>
+1. <code>cd</code> into the innermost <code>stock-average-1.1/</code> folder, where an <code>ls</code> would display <code>run.py</code><br>
+  - To run the program, enter <code>python3 run.py</code><br>
+  - If you want parameters, the first is the symbol followed by the optional current_price, such as:<br>
+    * <code>python3 run.py btc</code>
+    * <code>python3 run.py btc 3807.25</code>
 
 ## Methodology ##
 
- * Have you ever wanted to take the mean of N items, then wanted to see the impact for (N + 1) items?<br>
+Have you ever wanted to take the mean of N items, then wanted to see the impact for (N + 1) items?<br>
+Thankfully, you don't need to re-enter the those items each time if you record the numerator and denominator.
+
  * i.e. Finding what you need to score on the final to reach a certain letter grade.<br>
- * Thankfully, you don't need to re-enter the those items each time if you record the numerator and denominator.
+
 
 ###### Scenario: ######
 
  - You previously purchased some shares of a stock at a high price, and the price has dropped since then.
- - You are willing to spend some money today, because it is on sale.
- - You now need to quantify how many shares you would need to purchase at the current price to lower your average.
+ - Because the stock is on sale, you are willing to spend some money today to lower your average.
+ - You now need to quantify how many shares you would need to purchase at the current price.
 
-This program will incrementally display each of your potential averages, so you can gauge for yourself.
+This program will display your potential averages incrementally, so you can gauge for yourself.<br>
+For cryptocurrencies, potential averages will be displayed in increments of square root of the amount allotted.<br>
 
-##### Formula: #####
+#### Formula: ####
 
-Shares are pretty simple to find the mean, since they can only be purchased in increments of whole numbers.
+*n* represents the amount of shares you previously purchased at the *oldPrice*.<br>
+*x* represents the amount of shares you would potentially need to buy at the *currentPrice*.
 
 <pre>(n * oldPrice) + (x * currentPrice)
-----------------------------------------------
-                       (n + x)</pre>
+-----------------------------------
+              (n + x)</pre>
 
- - For cryptocurrencies, a modified version will be provided to account for purchasing a fraction of a coin.
+For cryptocurrencies, *x* will account for purchasing a fraction of a coin.
