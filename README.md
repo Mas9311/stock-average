@@ -18,9 +18,9 @@ Note: the **symbols/** folder will be created to store each of your entries so y
 ## Methodology ##
 
 Have you ever wanted to take the mean of N items, then wanted to see the impact for (N + 1) items?<br>
-Thankfully, you don't need to re-enter the those items each time if you record the numerator and denominator.
+Thankfully, you don't need to re-enter those items everytime if you record the numerator and denominator beforehand.<br>
 
- * i.e. Finding what you need to score on the final to reach a certain letter grade.<br>
+ * i.e. Finding what you need to score on the final to reach a certain letter grade by averaging your existing exams.
 
 
 ###### Scenario: ######
