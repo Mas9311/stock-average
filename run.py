@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-from sample import stock_average
+# -*- coding: utf-8 -*-
+
+from sample import interface
 
 if __name__ == '__main__':
-    stock_average.run()
+    interface.run()
