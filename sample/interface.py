@@ -16,16 +16,15 @@ class GUI(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
         self.master.title("Compute New Average")
-        self.pack(expand=True, fill=BOTH)
+        self.pack(fill=X)
         self.root = parent
-        self.root.configure(background='black', bd=0, width=500)
-        # self.root.resizable(False, False)
+        self.root.resizable(True, True)
 
         self.symbol = StringVar()
         self.asset_type = StringVar()
-        self.quantity = DoubleVar()
-        self.current_average = DoubleVar()
-        self.potential_average = DoubleVar()
+        self.quantity = StringVar()
+        self.current_average = StringVar()
+        self.potential_average = StringVar()
 
         self.close_button = None
         self.symbol_frame = None
@@ -44,27 +43,45 @@ class GUI(Frame):
                                    activebackground='#444444', activeforeground='#cccccc')
         self.close_button.pack(side=TOP, anchor=NE)
         self.symbol_frame = Symbol(self)
+        self.resize_frame()
+
+    def resize_frame(self):
+        active_frames = 1
+        if self.asset_type_frame is not None:
+            active_frames += 1
+        if self.quantity_frame:
+            active_frames += 1
+        if self.current_average_frame:
+            active_frames += 1
+        if self.potential_average_frame:
+            active_frames += 1
+        self.root.geometry('{}x{}'.format(500, 30 + (active_frames * 23)))
 
     def create_asset_type_frame(self):
         if self.asset_type_frame is None:
             self.asset_type_frame = AssetType(self)
+            self.resize_frame()
         else:
             self.asset_type_frame.deselect_buttons()
 
     def reload_quantity_description(self):
-        self.quantity_frame.reload_description()
+        if self.quantity_frame:
+            self.quantity_frame.reload_description()
 
     def create_quantity_frame(self):
         if self.quantity_frame is None:
             self.quantity_frame = Quantity(self)
+            self.resize_frame()
 
     def create_current_average_frame(self):
         if self.current_average_frame is None:
             self.current_average_frame = CurrentAverage(self)
+            self.resize_frame()
 
     def create_potential_average_frame(self):
         if self.potential_average_frame is None:
             self.potential_average_frame = PotentialAverage(self)
+            self.resize_frame()
 
     def populate_from_file(self):
         # Read from file, then populate the frames with the data
@@ -72,20 +89,29 @@ class GUI(Frame):
         self.create_quantity_frame()
         self.create_current_average_frame()
         self.create_potential_average_frame()
+        self.resize_frame()
 
-    def destroy_all_frames_after_symbol(self):
+    def destroy_all_frames_after_symbol(self, keep_asset_type=False):
         if self.asset_type_frame:
-            self.asset_type_frame.destroy()
-            self.asset_type_frame = None
+            if keep_asset_type:
+                self.asset_type_frame.deselect_buttons()
+            else:
+                self.asset_type_frame.destroy()
+                self.asset_type_frame = None
+                self.asset_type = StringVar()
         if self.quantity_frame:
             self.quantity_frame.destroy()
             self.quantity_frame = None
+            self.quantity = StringVar()
         if self.current_average_frame:
             self.current_average_frame.destroy()
             self.current_average_frame = None
+            self.current_average = StringVar()
         if self.potential_average_frame:
             self.potential_average_frame.destroy()
             self.potential_average_frame = None
+            self.potential_average = StringVar()
+        self.resize_frame()
 
 
 class Symbol(Frame):
@@ -140,11 +166,11 @@ class Symbol(Frame):
 
         self.delete_symbol_spaces()
 
-        cursor_pos = self.symbol_entry.index(INSERT)
         curr_symbol = self.symbol_entry.get().upper()
 
         if 'a' <= event.char.lower() <= 'z':
             # Received valid alpha input [a-zA-Z], so clear the entry text and re-write in ALL CAPS
+            cursor_pos = self.symbol_entry.index(INSERT)
             self.symbol_entry.delete(0, END)
             self.symbol_entry.insert(0, curr_symbol)
             self.symbol_entry.icursor(cursor_pos)
@@ -162,9 +188,11 @@ class Symbol(Frame):
                 # If user previously saved a file for this symbol, load it!
                 self.parent.populate_from_file()
             else:
+                # Else destroy all frames below symbol, but keep asset_type's Frame
                 self.parent.create_asset_type_frame()
+                self.parent.destroy_all_frames_after_symbol(keep_asset_type=True)
         else:
-            # No characters remain in the Entry textbox, so destroy all children
+            # No characters remain in the symbol entry widget, ∴ destroy all children
             self.parent.destroy_all_frames_after_symbol()
 
     def delete_symbol_spaces(self):
@@ -192,15 +220,15 @@ class AssetType(Frame):
 
     def create_asset_type_widgets(self):
         self.asset_type_label = Label(self, text="Asset Type", width=15)
-        self.asset_type_label.grid(row=0, column=0)
+        self.asset_type_label.pack(side=LEFT, anchor=W)
 
         self.stock_button = Radiobutton(self, text='stock', variable=self.parent.asset_type,
                                         val='stock', command=self.select)
-        self.stock_button.grid(row=0, column=1)
+        self.stock_button.pack(side=LEFT, anchor=W)
 
         self.crypto_button = Radiobutton(self, text='crypto', variable=self.parent.asset_type,
                                          val='cryptocurrency', command=self.select)
-        self.crypto_button.grid(row=0, column=2)
+        self.crypto_button.pack(side=LEFT, anchor=W)
 
     def select(self):
         self.parent.create_quantity_frame()
@@ -208,6 +236,7 @@ class AssetType(Frame):
     def deselect_buttons(self):
         self.stock_button.deselect()
         self.crypto_button.deselect()
+
         self.parent.reload_quantity_description()
 
 
@@ -228,7 +257,7 @@ class Quantity(Frame):
 
     def create_quantity_widgets(self):
         self.quantity_label = Label(self, text="Quantity", width=15)
-        self.quantity_label.grid(row=0, column=0)
+        self.quantity_label.pack(side=LEFT, anchor=W)
 
         self.quantity_entry = Entry(self, textvariable=self.parent.quantity)
         self.quantity_entry.insert(0, self.quantity_description)
@@ -237,7 +266,12 @@ class Quantity(Frame):
         self.quantity_entry.bind('<FocusIn>', self.quantity_entry_focused)
         self.quantity_entry.bind('<FocusOut>', self.quantity_entry_focused)
         self.quantity_entry.bind('<KeyRelease>', self.quantity_entry_key_released)
-        self.quantity_entry.grid(row=0, column=1)
+
+        self.quantity_entry.bind('<Insert>', lambda e: 'break')  # disable Insert
+        self.quantity_entry.bind('<Control-v>', lambda e: 'break')  # disable paste
+        self.quantity_entry.bind('<Control-y>', lambda e: 'break')  # disable uncommon undo (paste in tkinter)
+        self.quantity_entry.bind('<Button-3>', lambda e: 'break')  # disable right-click
+        self.quantity_entry.pack(side=LEFT, expand=True, fill=X)
 
     def quantity_entry_entered(self, _):
         if self.quantity_entry.get().find(self.quantity_description_basic) is not -1:
@@ -247,15 +281,14 @@ class Quantity(Frame):
         if not self.quantity_entry.get() and not self.quantity_focused:
             self.quantity_entry.insert(0, self.quantity_description)
 
-    def quantity_entry_key_released(self, event):
-        print(event.char)
-        if self.quantity_entry.get():
-            self.parent.create_current_average_frame()
-
     def quantity_entry_focused(self, _):
         self.quantity_focused = not self.quantity_focused
         if not self.quantity_focused and not self.quantity_entry.get():
             self.quantity_entry.insert(0, self.quantity_description)
+
+    def quantity_entry_key_released(self, _):
+        if self.quantity_entry.get():
+            self.parent.create_current_average_frame()
 
     def reload_description(self):
         self.quantity_description = self.quantity_description_basic
@@ -275,22 +308,58 @@ class CurrentAverage(Frame):
         self.current_average_label = None
         self.current_average_entry = None
         self.current_average_description = 'Enter your current Average'
+        self.current_average_focused = False
 
         self.create_current_average_widgets()
 
     def create_current_average_widgets(self):
         self.current_average_label = Label(self, text="Current Average", width=15)
-        self.current_average_label.grid(row=0, column=0)
+        self.current_average_label.pack(side=LEFT, anchor=W)
 
         self.current_average_entry = Entry(self, textvariable=self.parent.current_average)
         self.current_average_entry.insert(0, self.current_average_description)
+        self.current_average_entry.bind('<Enter>', self.current_average_entry_entered)
+        self.current_average_entry.bind('<Leave>', self.current_average_entry_left)
+        self.current_average_entry.bind('<FocusIn>', self.current_average_entry_focused)
+        self.current_average_entry.bind('<FocusOut>', self.current_average_entry_focused)
         self.current_average_entry.bind('<KeyRelease>', self.current_average_entry_key_released)
-        self.current_average_entry.grid(row=0, column=1)
+
+        self.current_average_entry.bind('<Insert>', lambda e: 'break')  # disable Insert
+        self.current_average_entry.bind('<Control-v>', lambda e: 'break')  # disable paste
+        self.current_average_entry.bind('<Control-y>', lambda e: 'break')  # disable uncommon undo (paste in tkinter)
+        self.current_average_entry.bind('<Button-3>', lambda e: 'break')  # disable right-click
+        self.current_average_entry.pack(side=LEFT, expand=True, fill=X)
+
+    def current_average_entry_entered(self, _):
+        if self.current_average_entry.get().find(self.current_average_description) is not -1:
+            self.current_average_entry.delete(0, END)
+            self.current_average_entry.insert(0, '$')
+
+    def current_average_entry_left(self, _):
+        current_average = self.current_average_entry.get()
+        if current_average.find('$') is 0 and len(current_average) is 1:
+            self.current_average_entry.delete(0, 1)
+        elif not current_average and not self.current_average_focused:
+            self.current_average_entry.insert(0, self.current_average_description)
+
+    def current_average_entry_focused(self, _):
+        self.current_average_focused = not self.current_average_focused
+        if not self.current_average_focused and not self.current_average_entry.get():
+            self.current_average_entry.insert(0, self.current_average_description)
+        elif self.current_average_focused and self.current_average_entry.get().find('$') is -1:
+            self.current_average_entry.insert(0, '$')
 
     def current_average_entry_key_released(self, event):
-        print(event.char)
         if self.current_average_entry.get():
             self.parent.create_potential_average_frame()
+        if not '0' <= event.char <= '9' and event.char != '.':
+            self.current_average_entry.delete(self.current_average_entry.index(INSERT) - 1)
+
+        first_decimal_point = self.current_average_entry.get().find('.')
+        if first_decimal_point is not -1:
+            second_decimal_point = self.current_average_entry.get()[first_decimal_point + 1:].find('.')
+            if second_decimal_point is not -1 and event.char == '.':
+                self.current_average_entry.delete(self.current_average_entry.index(INSERT) - 1)
 
 
 class PotentialAverage(Frame):
@@ -306,10 +375,10 @@ class PotentialAverage(Frame):
 
     def create_potential_average_widgets(self):
         self.potential_average_label = Label(self, text="Potential Average", width=15)
-        self.potential_average_label.pack(side=LEFT, expand=True)
+        self.potential_average_label.pack(side=LEFT, anchor=W)
 
         self.potential_average_entry = Entry(self, state='readonly')
-        self.potential_average_entry.pack(side=LEFT)
+        self.potential_average_entry.pack(side=LEFT, expand=True, fill=X)
 
 
 
