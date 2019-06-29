@@ -91,14 +91,11 @@ class GUI(Frame):
         self.create_potential_average_frame()
         self.resize_frame()
 
-    def destroy_all_frames_after_symbol(self, keep_asset_type=False):
+    def destroy_all_frames_after_symbol(self):
         if self.asset_type_frame:
-            if keep_asset_type:
-                self.asset_type_frame.deselect_buttons()
-            else:
-                self.asset_type_frame.destroy()
-                self.asset_type_frame = None
-                self.asset_type = StringVar()
+            self.asset_type_frame.destroy()
+            self.asset_type_frame = None
+            self.asset_type = StringVar()
         if self.quantity_frame:
             self.quantity_frame.destroy()
             self.quantity_frame = None
@@ -189,8 +186,8 @@ class Symbol(Frame):
                 self.parent.populate_from_file()
             else:
                 # Else destroy all frames below symbol, but keep asset_type's Frame
+                self.parent.destroy_all_frames_after_symbol()
                 self.parent.create_asset_type_frame()
-                self.parent.destroy_all_frames_after_symbol(keep_asset_type=True)
         else:
             # No characters remain in the symbol entry widget, ∴ destroy all children
             self.parent.destroy_all_frames_after_symbol()
@@ -333,14 +330,13 @@ class CurrentAverage(Frame):
     def current_average_entry_entered(self, _):
         if self.current_average_entry.get().find(self.current_average_description) is not -1:
             self.current_average_entry.delete(0, END)
-            self.current_average_entry.insert(0, '$')
 
     def current_average_entry_left(self, _):
-        current_average = self.current_average_entry.get()
-        if current_average.find('$') is 0 and len(current_average) is 1:
-            self.current_average_entry.delete(0, 1)
-        elif not current_average and not self.current_average_focused:
-            self.current_average_entry.insert(0, self.current_average_description)
+        if not self.current_average_focused:
+            if self.current_average_entry.get() == '$':
+                self.current_average_entry.delete(0, END)
+            if not self.current_average_entry.get():
+                self.current_average_entry.insert(0, self.current_average_description)
 
     def current_average_entry_focused(self, _):
         self.current_average_focused = not self.current_average_focused
@@ -350,9 +346,8 @@ class CurrentAverage(Frame):
             self.current_average_entry.insert(0, '$')
 
     def current_average_entry_key_released(self, event):
-        if self.current_average_entry.get():
-            self.parent.create_potential_average_frame()
-        if not '0' <= event.char <= '9' and event.char != '.':
+        if (len(repr(event.char)) is 3 or event.char == '\\') and not '0' <= event.char <= '9' and event.char != '.':
+            # Received invalid input: non-period-punctuation or alpha"""
             self.current_average_entry.delete(self.current_average_entry.index(INSERT) - 1)
 
         first_decimal_point = self.current_average_entry.get().find('.')
@@ -360,6 +355,15 @@ class CurrentAverage(Frame):
             second_decimal_point = self.current_average_entry.get()[first_decimal_point + 1:].find('.')
             if second_decimal_point is not -1 and event.char == '.':
                 self.current_average_entry.delete(self.current_average_entry.index(INSERT) - 1)
+
+        if self.current_average_entry.get().find('$') is not 0:
+            self.current_average_entry.insert(0, '$')
+
+        if self.current_average_entry.index(INSERT) is 0:
+            self.current_average_entry.icursor(1)
+
+        if len(self.current_average_entry.get()) > 1 and '0' <= event.char <= '9':
+            self.parent.create_potential_average_frame()
 
 
 class PotentialAverage(Frame):

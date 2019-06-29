@@ -4,7 +4,8 @@ import sys
 
 
 def get_folder():
-    """Returns the ./symbols folder path."""
+    """Returns the symbols/ folder path."""
+    # return os.path.join('~/', 'Software', 'MyPrograms', 'stock-average', 'symbols')
     return os.path.join(os.getcwd(), 'symbols')
 
 
