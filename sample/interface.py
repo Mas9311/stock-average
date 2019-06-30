@@ -36,7 +36,7 @@ class GUI(Frame):
         self.potential_average_frame = None
 
         self._frames = self.frames_dict()
-        self.frame_with_focus = 0
+        self.focused_frame = 0
 
         self.create_next_frame(0)  # create TitleBar Frame
         self.create_next_frame(1)  # create Alpha "Symbol" Frame
@@ -48,7 +48,7 @@ class GUI(Frame):
                 'created': False,
                 'frame_var': self.title_bar_frame,
                 'label': 'Title Bar',
-                'options': [('×', 'ne')],
+                'options': [('×', 'ne')],  # ?: ('Options', 'nw')
             },
             1: {
                 'create': self.create_alpha_frame,
@@ -110,8 +110,8 @@ class GUI(Frame):
         }
 
     def resize_frame(self):
-        self.root.update()
-        w = self.root.winfo_reqwidth() + 100
+        self.root.update_idletasks()
+        w = 400 if self.root.winfo_reqwidth() < 400 else self.root.winfo_reqwidth()
         h = self.root.winfo_reqheight()
         # _, _, x, y = self.root.winfo_geometry().replace('x', '.').replace('+', '.').split('.')
         geo = f'{w}x{h}'
@@ -119,13 +119,14 @@ class GUI(Frame):
         # print(geo)
 
     def create_next_frame(self, next_index):
-        """Will create the frame if the next frame has not been created already.
-        Optionally passed the index of the frame"""
-        if self._frames[next_index]:
-            if self.get_val(next_index, 'created') is False:
-                self.get_val(next_index, 'create')(next_index)
-                self._frames[next_index]['created'] = True
-                self.resize_frame()
+        """Will create the frame if:
+        1. The next_index has a value (it exists) in the GUI._frames dict
+          and
+        2. The next_index's Frame has not been already created"""
+        if self._frames[next_index] and not self.get_val(next_index, 'created'):
+            self.get_val(next_index, 'create')(next_index)
+            self._frames[next_index]['created'] = True
+            self.resize_frame()
 
     def create_title_bar_frame(self, index):
         self._frames[index]['frame_var'] = TitleBar(self, index)
@@ -145,11 +146,12 @@ class GUI(Frame):
     def destroy_frame(self, index):
         """Destroys the Frame (and all nested widgets recursively) at a given index of GUI.frames
         Sets all modified attributes to their original values. See GUI.frames_dict()"""
-        self.get_val(index, 'frame_var').destroy()  # recursively destroys the Frame and all widgets inside it
-        self.set_val(index, 'frame_var', None)  # forget the reference, ∴ send to GC
-        self.set_val(index, 'created', False)  # reset the 'created' attribute to False (DNE)
-        self.set_val(index, 'StringVar', StringVar())  # reset the String variable the Entry text is stored in
-        self.resize_frame()  # resize the frame since this Frame was destroyed
+        if self.get_val(index, 'created'):
+            self.get_val(index, 'frame_var').destroy()  # recursively destroys the Frame and all widgets inside it
+            self.set_val(index, 'frame_var', None)  # forget the reference, ∴ send to GC
+            self.set_val(index, 'created', False)  # reset the 'created' attribute to False (DNE)
+            self.set_val(index, 'StringVar', StringVar())  # reset the String variable the Entry text is stored in
+            self.resize_frame()  # resize the frame since this Frame was destroyed
 
     def get_val(self, index, key):
         """Accessor of the GUI._frames variable"""
@@ -201,6 +203,10 @@ class TitleBar(Frame):
 
 
 class Alpha(Frame):
+    """The only characters that will remain in this Frame's Entry textbox are Alpha letters: {A, B, ..., Z}.
+    Feel free to type a lowercase letter, because the text is replaced with CAPITAL letters.
+    All other printable characters {'c', '1', '~', ' ', ...} will be deleted in-place.
+    Meta keys {Shift, Tab, Left, Control, Escape, ...} will not alter the Entry's textbox."""
     def __init__(self, parent, index):
         Frame.__init__(self, parent)
         self.pack(expand=True, fill=BOTH)
@@ -211,6 +217,8 @@ class Alpha(Frame):
         self.description = self.parent.get_val(self.index, 'description')
         self.alpha_label = None
         self.alpha_entry = None
+        self.last_symbol_entered = None
+        self.valid_chars = [('a', 'z')]
 
         self.create_alpha_widgets()
 
@@ -222,8 +230,8 @@ class Alpha(Frame):
         self.alpha_entry.insert(0, self.description)
         self.alpha_entry.bind('<Enter>', self.alpha_entry_entered)
         self.alpha_entry.bind('<Leave>', self.alpha_entry_left)
-        self.alpha_entry.bind('<FocusIn>', self.alpha_entry_focus_in)
-        self.alpha_entry.bind('<FocusOut>', self.alpha_entry_focus_out)
+        self.alpha_entry.bind('<FocusIn>', self.alpha_entry_focus_in)  # mouse hovers over
+        self.alpha_entry.bind('<FocusOut>', self.alpha_entry_focus_out)  # mouse leaves
         self.alpha_entry.bind('<KeyRelease>', self.alpha_entry_key_released)
 
         self.alpha_entry.bind('<Insert>', lambda e: 'break')  # disable Insert
@@ -234,67 +242,116 @@ class Alpha(Frame):
 
     def alpha_entry_entered(self, _):
         if self.alpha_entry.get() == self.description:
-            self.alpha_entry.delete(0, END)
+            self._delete_characters()
 
     def alpha_entry_left(self, _):
-        if self.parent.frame_with_focus is not self.index and not self.alpha_entry.get():
+        if self.parent.focused_frame is not self.index and not self.alpha_entry.get():
             self.alpha_entry.insert(0, self.description)
 
     def alpha_entry_focus_in(self, _):
-        self.parent.frame_with_focus = self.index
+        self.parent.focused_frame = self.index
 
     def alpha_entry_focus_out(self, _):
         if not self.alpha_entry.get():
             self.alpha_entry.insert(0, self.description)
 
     def alpha_entry_key_released(self, event):
-        if (len(repr(event.char)) is 3 or event.char == '\\') and not 'a' <= event.char.lower() <= 'z':
-            # Received invalid input: punctuation or digit"""
-            self.alpha_entry.delete(self.alpha_entry.index(INSERT) - 1)
+        """Called every time a key on the keyboard is released while the cursor is in the Alpha Entry's textbox.
+        If the key pressed is a printable character: check if it a valid character.
+         If it is a valid character [azAZ]: convert the Entry's text to ALL CAPS.
+          If the length of the Entry's text is greater than 4: truncate the last character.
+         Else the char is a digit or punctuation: delete it in place. (doesn't move the cursor)
+        If the textbox's last character is a space, delete it.
+        If the textbox contains a space anywhere else: clear all text. (the description is present)
+        If no characters currently remain in the textbox: destroy all frames after this Frame.
+        Else the is at least one character: check if the file exists"""
+        if self._is_printable(event.char):
+            # Received a printable character: {alpha || numeric || punctuation}
+            if self._is_valid_char(event.char):
+                # Received valid input: [azAZ]
+                self._rewrite_in_all_caps()  # [AZ]
 
-        self.delete_symbol_spaces()
+                if len(self.alpha_entry.get()) <= 4:
+                    print('Symbol:', self.alpha_entry.get())
+                else:
+                    # Length is >= 5, ∴ delete the last letter
+                    self._delete_characters(4, END)
+            else:
+                # Received invalid input: numeric || punctuation
+                self._delete_characters(INSERT, -1, END)
+        self._delete_symbol_spaces()
 
-        curr_symbol = self.alpha_entry.get().upper()
-
-        if 'a' <= event.char.lower() <= 'z':
-            # Received valid alpha input [a-zA-Z], so clear the entry text and re-write in ALL CAPS
-            cursor_pos = self.alpha_entry.index(INSERT)
-            self.alpha_entry.delete(0, END)
-            self.alpha_entry.insert(0, curr_symbol)
-            self.alpha_entry.icursor(cursor_pos)
-
-        if curr_symbol:
+        if not self.alpha_entry.get():
+            # No characters remain in the symbol entry widget, ∴ destroy all children
+            self.parent.destroy_all_frames_after(self.index)
+        else:
             # If at least one character remains
-            if 'a' <= event.char.lower() <= 'z':
-                # If the last button received was valid
-                if len(self.alpha_entry.get()) > 4:
-                    # If the length of the symbol is 5+, delete the last letter
-                    self.alpha_entry.delete(self.alpha_entry.index(END) - 1)
-                print('Symbol:', curr_symbol)
-
-            if file_helper.file_exists(curr_symbol.lower()):
+            if file_helper.file_exists(self.alpha_entry.get().lower()):
                 # If user previously saved a file for this symbol, load it!
                 self.parent.populate_from_file()
             else:
                 # Else destroy all frames below symbol, but keep asset_type's Frame
-                self.parent.destroy_all_frames_after(self.index)
+                if self.last_symbol_entered != self.alpha_entry.get():
+                    self.parent.destroy_all_frames_after(self.index)
                 self.parent.create_next_frame(self.index + 1)
-        else:
-            # No characters remain in the symbol entry widget, ∴ destroy all children
-            self.parent.destroy_all_frames_after(self.index)
 
-    def delete_symbol_spaces(self):
+        self.last_symbol_entered = self.alpha_entry.get()
+
+    def destroy_frame(self):
+        self.parent.destroy_frame(self.index)
+
+    def _delete_symbol_spaces(self):
         space_position = self.alpha_entry.get().find(' ')
         last_char_index = len(self.alpha_entry.get()) - 1
 
         if space_position != -1:
             if space_position < last_char_index:
-                self.alpha_entry.delete(0, END)
+                self._delete_characters()
             elif space_position is last_char_index:
-                self.alpha_entry.delete(last_char_index)
+                self._delete_characters(last_char_index)
 
-    def destroy_frame(self):
-        self.parent.destroy_frame(self.index)
+    def _delete_characters(self, from_i=0, from_offset=0, to_i=END):
+        if isinstance(from_i, str):
+            from_i = self.alpha_entry.index(from_i)
+        from_i += from_offset
+
+        if isinstance(to_i, str):
+            to_i = self.alpha_entry.index(to_i)
+
+        self.alpha_entry.delete(from_i, to_i)
+
+    def _is_printable(self, char):
+        return len(repr(char)) is 3 or char == '\\'
+
+    def _is_valid_char(self, char):
+        if self._is_printable(char):
+            char = char.lower()
+            for valid in self.valid_chars:
+                if isinstance(valid, tuple):
+                    if not valid[0] <= char <= valid[1]:
+                        # char does not lie within valid range
+                        return False
+                    # else the char lies within valid range: continue
+                elif isinstance(valid, str):
+                    if char != valid:
+                        # char does not match the valid character
+                        return False
+                    # else the char matched the valid character: continue
+
+            # char did not fail any validity checks, ∴ char is valid!
+            print(f'_{char}_ is a valid character')
+            return True
+        else:
+            # key is a meta key
+            return False
+
+    def _rewrite_in_all_caps(self):
+        """If we received a valid letter [azAZ]: clear the entry text and re-write in ALL CAPS"""
+        curr_symbol = self.alpha_entry.get().upper()
+        cursor_pos = self.alpha_entry.index(INSERT)
+        self._delete_characters()
+        self.alpha_entry.insert(0, curr_symbol)
+        self.alpha_entry.icursor(cursor_pos)
 
 
 class Radio(Frame):
@@ -359,6 +416,8 @@ class Numeric(Frame):
         self.quantity_entry = None
         self.quantity_focused = False
 
+        self.valid_chars = [('0', '9'), '.']
+
         self.create_quantity_widgets()
 
     def create_quantity_widgets(self):
@@ -369,8 +428,8 @@ class Numeric(Frame):
         self.quantity_entry.insert(0, self.quantity_description)
         self.quantity_entry.bind('<Enter>', self.quantity_entry_entered)
         self.quantity_entry.bind('<Leave>', self.quantity_entry_left)
-        self.quantity_entry.bind('<FocusIn>', self.quantity_entry_focused)
-        self.quantity_entry.bind('<FocusOut>', self.quantity_entry_focused)
+        self.bind('<FocusIn>', self.quantity_entry_focused)
+        self.bind('<FocusOut>', self.quantity_entry_focused)
         self.quantity_entry.bind('<KeyRelease>', self.quantity_entry_key_released)
 
         self.quantity_entry.bind('<Insert>', lambda e: 'break')  # disable Insert
@@ -410,10 +469,9 @@ class Currency(Frame):
 
         self.disabled = self.parent.get_val(self.index, 'disabled')
         self.money_frame_description = self.parent.get_val(self.index, 'description')
-        self.money_frame_focused = False
-
         self.money_frame_label = None
         self.money_frame_entry = None
+        self.valid_chars = [('0', '9'), '.']
 
         self.create_money_frame_widgets()
 
@@ -428,8 +486,7 @@ class Currency(Frame):
             self.money_frame_entry.insert(0, self.money_frame_description)
         self.money_frame_entry.bind('<Enter>', self.money_frame_entry_entered)
         self.money_frame_entry.bind('<Leave>', self.money_frame_entry_left)
-        self.money_frame_entry.bind('<FocusIn>', self.money_frame_entry_focused)
-        self.money_frame_entry.bind('<FocusOut>', self.money_frame_entry_focused)
+        self.money_frame_entry.bind('<FocusIn>', self.money_frame_entry_focused_in)
         self.money_frame_entry.bind('<KeyRelease>', self.money_frame_entry_key_released)
 
         self.money_frame_entry.bind('<Insert>', lambda e: 'break')  # disable Insert
@@ -444,20 +501,19 @@ class Currency(Frame):
                 self.money_frame_entry.delete(0, END)
 
     def money_frame_entry_left(self, _):
-        if not self.disabled:
-            if not self.money_frame_focused:
-                if self.money_frame_entry.get() == '$':
-                    self.money_frame_entry.delete(0, END)
-                if not self.money_frame_entry.get():
-                    self.money_frame_entry.insert(0, self.money_frame_description)
+        if not self.disabled and self.parent.focused_frame is not self.index:
+            if self.money_frame_entry.get() == '$':
+                self.money_frame_entry.delete(0, END)
+            if not self.money_frame_entry.get():
+                self.money_frame_entry.insert(0, self.money_frame_description)
 
-    def money_frame_entry_focused(self, _):
+    def money_frame_entry_focused_in(self, _):
         if not self.disabled:
-            self.money_frame_focused = not self.money_frame_focused
-            if not self.money_frame_focused and self.money_frame_entry.get() == '$':
+            self.parent.focused_frame = self.index
+            if self.parent.focused_frame is not self.index and self.money_frame_entry.get() == '$':
                 self.money_frame_entry.delete(0, 1)
                 self.money_frame_entry.insert(0, self.money_frame_description)
-            elif self.money_frame_focused and self.money_frame_entry.get().find('$') is -1:
+            elif self.parent.focused_frame is self.index and self.money_frame_entry.get().find('$') is -1:
                 self.money_frame_entry.insert(0, '$')
 
     def money_frame_entry_key_released(self, event):
