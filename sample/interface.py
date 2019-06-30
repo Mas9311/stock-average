@@ -35,7 +35,7 @@ class GUI(Frame):
         self.current_price_frame = None
         self.potential_average_frame = None
 
-        self.frames = self.frames_dict()
+        self._frames = self.frames_dict()
         self.frame_with_focus = 0
 
         self.create_next_frame(0)  # create TitleBar Frame
@@ -48,29 +48,30 @@ class GUI(Frame):
                 'created': False,
                 'frame_var': self.title_bar_frame,
                 'label': 'Title Bar',
+                'options': [('×', 'ne')],
             },
             1: {
                 'create': self.create_alpha_frame,
                 'created': False,
-                'description': 'Enter the ticker symbol',
+                'description': 'Enter the ticker symbol.',
                 'frame_var': self.symbol_frame,
                 'index': 1,
                 'label': 'Symbol',
                 'StringVar': self.symbol_string,
             },
             2: {
-                'buttons': ['stock', 'crypto'],
                 'create': self.create_radio_frame,
                 'created': False,
                 'frame_var': self.asset_type_frame,
                 'index': 2,
                 'label': 'Asset Type',
+                'options': ['stock', 'cryptocurrency'],
                 'StringVar': self.asset_type_string,
             },
             3: {
                 'create': self.create_numeric_frame,
                 'created': False,
-                'description': 'Enter the # of shares you own',
+                'description': 'Enter the # of shares you own.',
                 'frame_var': self.quantity_frame,
                 'index': 3,
                 'label': 'Quantity',
@@ -89,7 +90,7 @@ class GUI(Frame):
             5: {
                 'create': self.create_currency_frame,
                 'created': False,
-                'description': 'Enter the current market price',
+                'description': 'Enter the current market price.',
                 'disabled': False,
                 'frame_var': self.current_price_frame,
                 'index': 5,
@@ -109,7 +110,7 @@ class GUI(Frame):
         }
 
     def resize_frame(self):
-        self.root.update_idletasks()
+        self.root.update()
         w = self.root.winfo_reqwidth() + 100
         h = self.root.winfo_reqheight()
         # _, _, x, y = self.root.winfo_geometry().replace('x', '.').replace('+', '.').split('.')
@@ -120,43 +121,57 @@ class GUI(Frame):
     def create_next_frame(self, next_index):
         """Will create the frame if the next frame has not been created already.
         Optionally passed the index of the frame"""
-        if self.frames[next_index]:
+        if self._frames[next_index]:
             if self.get_val(next_index, 'created') is False:
-                self.frames[next_index]['create'](next_index)
-                self.frames[next_index]['created'] = True
+                self.get_val(next_index, 'create')(next_index)
+                self._frames[next_index]['created'] = True
                 self.resize_frame()
 
     def create_title_bar_frame(self, index):
-        self.frames[index]['frame_var'] = TitleBar(self, index)
+        self._frames[index]['frame_var'] = TitleBar(self, index)
 
     def create_alpha_frame(self, index):
-        self.frames[index]['frame_var'] = Alpha(self, index)
+        self._frames[index]['frame_var'] = Alpha(self, index)
 
     def create_radio_frame(self, index):
-        self.frames[index]['frame_var'] = Radio(self, index)
+        self._frames[index]['frame_var'] = Radio(self, index)
 
     def create_numeric_frame(self, index):
-        self.frames[index]['frame_var'] = Numeric(self, index)
+        self._frames[index]['frame_var'] = Numeric(self, index)
 
     def create_currency_frame(self, index):
-        self.frames[index]['frame_var'] = Currency(self, index)
+        self._frames[index]['frame_var'] = Currency(self, index)
+
+    def destroy_frame(self, index):
+        """Destroys the Frame (and all nested widgets recursively) at a given index of GUI.frames
+        Sets all modified attributes to their original values. See GUI.frames_dict()"""
+        self.get_val(index, 'frame_var').destroy()  # recursively destroys the Frame and all widgets inside it
+        self.set_val(index, 'frame_var', None)  # forget the reference, ∴ send to GC
+        self.set_val(index, 'created', False)  # reset the 'created' attribute to False (DNE)
+        self.set_val(index, 'StringVar', StringVar())  # reset the String variable the Entry text is stored in
+        self.resize_frame()  # resize the frame since this Frame was destroyed
 
     def get_val(self, index, key):
-        return self.frames[index][key]
+        """Accessor of the GUI._frames variable"""
+        return self._frames[index][key]
 
-    #     def populate_from_file(self):
-    #         # Read from file, then populate the frames with the data
-    #         self.create_asset_type_frame()
-    #         self.create_quantity_frame()
-    #         self.create_current_average_frame()
-    #         self.create_potential_average_frame()
-    #         self.resize_frame()
+    def set_val(self, index, key, value):
+        """Modifier of the GUI._frames variable"""
+        self._frames[index][key] = value
+
+    def populate_from_file(self):
+        """Read data from file, create the Frame, then populate with data"""
+        # Read data from file
+        for index in self._frames.keys():
+            # Create the Frame
+            self.create_next_frame(index)
+            # Populate the Frame's StringVar with data
+        self.resize_frame()
 
     def destroy_all_frames_after(self, index):
-        for i in self.frames.keys():
-            print(i, self.frames[i]['frame_var'])
-            if i > index and self.frames[i]['created']:
-                self.frames[i]['frame_var'].destroy_frame()
+        for i in self._frames.keys():
+            if i > index and self.get_val(i, 'created'):
+                self.get_val(i, 'frame_var').destroy_frame()
 
 
 class TitleBar(Frame):
@@ -167,23 +182,22 @@ class TitleBar(Frame):
         self.root = self.parent.root
 
         self.index = index
-        self.close_button = None
+        self.buttons = []
 
         self.create_title_bar_widgets()
 
     def create_title_bar_widgets(self):
-        self.close_button = Button(self, highlightthickness=0, text='×', command=self._close,
-                                   activebackground='#444444', activeforeground='#cccccc')
-        self.close_button.pack(side=TOP, anchor=NE)
+        for button_type, anchor_location in self.parent.get_val(self.index, 'options'):
+            button = Button(self, highlightthickness=0, text=button_type, command=self._close,
+                            activebackground='#444444', activeforeground='#cccccc')
+            button.pack(side=TOP, anchor=anchor_location)
+            self.buttons.append(button)
 
     def _close(self):
         self.root.destroy()
 
     def destroy_frame(self):
-        self.parent.frames[self.index]['frame_var'].destroy()
-        self.parent.frames[self.index]['frame_var'] = None
-        self.parent.frames[self.index]['created'] = False
-        self.parent.resize_frame()
+        self.parent.destroy_frame(self.index)
 
 
 class Alpha(Frame):
@@ -201,7 +215,7 @@ class Alpha(Frame):
         self.create_alpha_widgets()
 
     def create_alpha_widgets(self):
-        self.alpha_label = Label(self, text="Symbol", width=15)
+        self.alpha_label = Label(self, text=self.parent.get_val(self.index, 'label'), width=15)
         self.alpha_label.pack(side=LEFT, anchor=W)
 
         self.alpha_entry = Entry(self, textvariable=self.parent.get_val(self.index, 'StringVar'))
@@ -263,7 +277,7 @@ class Alpha(Frame):
                 self.parent.populate_from_file()
             else:
                 # Else destroy all frames below symbol, but keep asset_type's Frame
-                # self.parent.destroy_all_frames_after_symbol()
+                self.parent.destroy_all_frames_after(self.index)
                 self.parent.create_next_frame(self.index + 1)
         else:
             # No characters remain in the symbol entry widget, ∴ destroy all children
@@ -280,11 +294,7 @@ class Alpha(Frame):
                 self.alpha_entry.delete(last_char_index)
 
     def destroy_frame(self):
-        self.parent.frames[self.index]['frame_var'].destroy()
-        self.parent.frames[self.index]['frame_var'] = None
-        self.parent.frames[self.index]['created'] = False
-        self.parent.frames[self.index]['StringVar'] = StringVar()
-        self.parent.resize_frame()
+        self.parent.destroy_frame(self.index)
 
 
 class Radio(Frame):
@@ -297,34 +307,43 @@ class Radio(Frame):
 
         self.radio_label = None
         self.buttons = []
+        self.last_button_selected = None
 
         self.create_asset_type_widgets()
 
     def create_asset_type_widgets(self):
-        self.radio_label = Label(self, text="Asset Type", width=15)
+        self.radio_label = Label(self, text=self.parent.get_val(self.index, 'label'), width=15)
         self.radio_label.pack(side=LEFT, anchor=W)
 
-        for button_type in self.parent.frames[self.index]['buttons']:
-            button = Radiobutton(self, text=button_type, variable=self.parent.get_val(self.index, 'StringVar'),
-                                 val=button_type, command=self.select)
+        for option_text in self.parent.get_val(self.index, 'options'):
+            button = Radiobutton(self, text=option_text, variable=self.parent.get_val(self.index, 'StringVar'),
+                                 val=option_text, command=lambda option=option_text: self.select(option))
             button.pack(side=LEFT, anchor=W)
             self.buttons.append(button)
 
-    def select(self):
-        self.parent.create_next_frame(self.index + 1)
+    def select(self, option_text):
+        if self.last_button_selected is None:
+            # Case 1: no Buttons selected => a Button selected
+            print(self.parent.symbol_string.get(), 'is a', option_text)
+            self.last_button_selected = option_text
+            self.parent.create_next_frame(self.index + 1)
+        elif self.last_button_selected != option_text:
+            # Case 2: a Button selected => a different Button selected
+            print(self.parent.symbol_string.get(), 'is a', option_text)
+            self.last_button_selected = option_text
+        else:
+            # Case 3: a Button selected => no Buttons selected
+            self.deselect_buttons()
+            self.last_button_selected = None
+            self.parent.destroy_all_frames_after(self.index)
 
     def deselect_buttons(self):
-        for i in range(len(self.buttons)):
-            self.buttons[i].deselect()
-
-    def destroy_frame(self):
         for button in self.buttons:
             button.deselect()
-        self.parent.frames[self.index]['frame_var'].destroy()
-        self.parent.frames[self.index]['frame_var'] = None
-        self.parent.frames[self.index]['created'] = False
-        self.parent.frames[self.index]['StringVar'] = StringVar()
-        self.parent.resize_frame()
+
+    def destroy_frame(self):
+        self.deselect_buttons()
+        self.parent.destroy_frame(self.index)
 
 
 class Numeric(Frame):
@@ -343,7 +362,7 @@ class Numeric(Frame):
         self.create_quantity_widgets()
 
     def create_quantity_widgets(self):
-        self.quantity_label = Label(self, text="Quantity", width=15)
+        self.quantity_label = Label(self, text=self.parent.get_val(self.index, 'label'), width=15)
         self.quantity_label.pack(side=LEFT, anchor=W)
 
         self.quantity_entry = Entry(self, textvariable=self.parent.get_val(self.index, 'StringVar'))
@@ -378,11 +397,7 @@ class Numeric(Frame):
             self.parent.create_next_frame(self.index + 1)
 
     def destroy_frame(self):
-        self.parent.frames[self.index]['frame_var'].destroy()
-        self.parent.frames[self.index]['frame_var'] = None
-        self.parent.frames[self.index]['created'] = False
-        self.parent.frames[self.index]['StringVar'] = StringVar()
-        self.parent.resize_frame()
+        self.parent.destroy_frame(self.index)
 
 
 class Currency(Frame):
@@ -468,8 +483,4 @@ class Currency(Frame):
             self.parent.create_next_frame(self.index + 1)
 
     def destroy_frame(self):
-        self.parent.frames[self.index]['frame_var'].destroy()
-        self.parent.frames[self.index]['frame_var'] = None
-        self.parent.frames[self.index]['created'] = False
-        self.parent.frames[self.index]['StringVar'] = StringVar()
-        self.parent.resize_frame()
+        self.parent.destroy_frame(self.index)
