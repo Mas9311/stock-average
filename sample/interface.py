@@ -4,12 +4,12 @@ from sample import file_helper
 
 
 def run():
-    # if parameter_passed != 'cli':
+    if True:  # parameter_passed != 'cli'
         root = Tk()
         GUI(root)
         root.mainloop()
-    # else:
-    #     stock_average.run()
+    else:
+        stock_average.run()
 
 
 class GUI(Frame):
@@ -18,167 +18,244 @@ class GUI(Frame):
         self.master.title("Compute New Average")
         self.pack(fill=X)
         self.root = parent
-        self.root.resizable(True, True)
+        self.root.resizable(True, False)
 
-        self.symbol = StringVar()
-        self.asset_type = StringVar()
-        self.quantity = StringVar()
-        self.current_average = StringVar()
-        self.potential_average = StringVar()
+        self.symbol_string = StringVar()
+        self.asset_type_string = StringVar()
+        self.quantity_string = StringVar()
+        self.current_average_string = StringVar()
+        self.current_price_string = StringVar()
+        self.potential_average_string = StringVar()
 
-        self.close_button = None
+        self.title_bar_frame = None
         self.symbol_frame = None
         self.asset_type_frame = None
         self.quantity_frame = None
         self.current_average_frame = None
+        self.current_price_frame = None
         self.potential_average_frame = None
 
-        self.create_widgets()
+        self.frames = self.frames_dict()
+        self.frame_with_focus = 0
+
+        self.create_next_frame(0)  # create TitleBar Frame
+        self.create_next_frame(1)  # create Alpha "Symbol" Frame
+
+    def frames_dict(self):
+        return {
+            0: {
+                'create': self.create_title_bar_frame,
+                'created': False,
+                'frame_var': self.title_bar_frame,
+                'label': 'Title Bar',
+            },
+            1: {
+                'create': self.create_alpha_frame,
+                'created': False,
+                'description': 'Enter the ticker symbol',
+                'frame_var': self.symbol_frame,
+                'index': 1,
+                'label': 'Symbol',
+                'StringVar': self.symbol_string,
+            },
+            2: {
+                'buttons': ['stock', 'crypto'],
+                'create': self.create_radio_frame,
+                'created': False,
+                'frame_var': self.asset_type_frame,
+                'index': 2,
+                'label': 'Asset Type',
+                'StringVar': self.asset_type_string,
+            },
+            3: {
+                'create': self.create_numeric_frame,
+                'created': False,
+                'description': 'Enter the # of shares you own',
+                'frame_var': self.quantity_frame,
+                'index': 3,
+                'label': 'Quantity',
+                'StringVar': self.quantity_string,
+            },
+            4: {
+                'create': self.create_currency_frame,
+                'created': False,
+                'description': 'Enter your current average.',
+                'disabled': False,
+                'frame_var': self.current_average_frame,
+                'index': 4,
+                'label': 'Current Average',
+                'StringVar': self.current_average_string,
+            },
+            5: {
+                'create': self.create_currency_frame,
+                'created': False,
+                'description': 'Enter the current market price',
+                'disabled': False,
+                'frame_var': self.current_price_frame,
+                'index': 5,
+                'label': 'Current Price',
+                'StringVar': self.current_price_string,
+            },
+            6: {
+                'create': self.create_currency_frame,
+                'created': False,
+                'description': None,
+                'disabled': True,
+                'frame_var': self.potential_average_frame,
+                'index': 6,
+                'label': 'Potential Average',
+                'StringVar': self.potential_average_string,
+            }
+        }
+
+    def resize_frame(self):
+        self.root.update_idletasks()
+        w = self.root.winfo_reqwidth() + 100
+        h = self.root.winfo_reqheight()
+        # _, _, x, y = self.root.winfo_geometry().replace('x', '.').replace('+', '.').split('.')
+        geo = f'{w}x{h}'
+        self.root.geometry(geo)
+        # print(geo)
+
+    def create_next_frame(self, next_index):
+        """Will create the frame if the next frame has not been created already.
+        Optionally passed the index of the frame"""
+        if self.frames[next_index]:
+            if self.get_val(next_index, 'created') is False:
+                self.frames[next_index]['create'](next_index)
+                self.frames[next_index]['created'] = True
+                self.resize_frame()
+
+    def create_title_bar_frame(self, index):
+        self.frames[index]['frame_var'] = TitleBar(self, index)
+
+    def create_alpha_frame(self, index):
+        self.frames[index]['frame_var'] = Alpha(self, index)
+
+    def create_radio_frame(self, index):
+        self.frames[index]['frame_var'] = Radio(self, index)
+
+    def create_numeric_frame(self, index):
+        self.frames[index]['frame_var'] = Numeric(self, index)
+
+    def create_currency_frame(self, index):
+        self.frames[index]['frame_var'] = Currency(self, index)
+
+    def get_val(self, index, key):
+        return self.frames[index][key]
+
+    #     def populate_from_file(self):
+    #         # Read from file, then populate the frames with the data
+    #         self.create_asset_type_frame()
+    #         self.create_quantity_frame()
+    #         self.create_current_average_frame()
+    #         self.create_potential_average_frame()
+    #         self.resize_frame()
+
+    def destroy_all_frames_after(self, index):
+        for i in self.frames.keys():
+            print(i, self.frames[i]['frame_var'])
+            if i > index and self.frames[i]['created']:
+                self.frames[i]['frame_var'].destroy_frame()
+
+
+class TitleBar(Frame):
+    def __init__(self, parent, index):
+        Frame.__init__(self, parent)
+        self.pack(expand=True, fill=BOTH)
+        self.parent = parent
+        self.root = self.parent.root
+
+        self.index = index
+        self.close_button = None
+
+        self.create_title_bar_widgets()
+
+    def create_title_bar_widgets(self):
+        self.close_button = Button(self, highlightthickness=0, text='×', command=self._close,
+                                   activebackground='#444444', activeforeground='#cccccc')
+        self.close_button.pack(side=TOP, anchor=NE)
 
     def _close(self):
         self.root.destroy()
 
-    def create_widgets(self):
-        self.close_button = Button(self, highlightthickness=0, text='×', command=self._close,
-                                   activebackground='#444444', activeforeground='#cccccc')
-        self.close_button.pack(side=TOP, anchor=NE)
-        self.symbol_frame = Symbol(self)
-        self.resize_frame()
-
-    def resize_frame(self):
-        active_frames = 1
-        if self.asset_type_frame is not None:
-            active_frames += 1
-        if self.quantity_frame:
-            active_frames += 1
-        if self.current_average_frame:
-            active_frames += 1
-        if self.potential_average_frame:
-            active_frames += 1
-        self.root.geometry('{}x{}'.format(500, 30 + (active_frames * 23)))
-
-    def create_asset_type_frame(self):
-        if self.asset_type_frame is None:
-            self.asset_type_frame = AssetType(self)
-            self.resize_frame()
-        else:
-            self.asset_type_frame.deselect_buttons()
-
-    def reload_quantity_description(self):
-        if self.quantity_frame:
-            self.quantity_frame.reload_description()
-
-    def create_quantity_frame(self):
-        if self.quantity_frame is None:
-            self.quantity_frame = Quantity(self)
-            self.resize_frame()
-
-    def create_current_average_frame(self):
-        if self.current_average_frame is None:
-            self.current_average_frame = CurrentAverage(self)
-            self.resize_frame()
-
-    def create_potential_average_frame(self):
-        if self.potential_average_frame is None:
-            self.potential_average_frame = PotentialAverage(self)
-            self.resize_frame()
-
-    def populate_from_file(self):
-        # Read from file, then populate the frames with the data
-        self.create_asset_type_frame()
-        self.create_quantity_frame()
-        self.create_current_average_frame()
-        self.create_potential_average_frame()
-        self.resize_frame()
-
-    def destroy_all_frames_after_symbol(self):
-        if self.asset_type_frame:
-            self.asset_type_frame.destroy()
-            self.asset_type_frame = None
-            self.asset_type = StringVar()
-        if self.quantity_frame:
-            self.quantity_frame.destroy()
-            self.quantity_frame = None
-            self.quantity = StringVar()
-        if self.current_average_frame:
-            self.current_average_frame.destroy()
-            self.current_average_frame = None
-            self.current_average = StringVar()
-        if self.potential_average_frame:
-            self.potential_average_frame.destroy()
-            self.potential_average_frame = None
-            self.potential_average = StringVar()
-        self.resize_frame()
+    def destroy_frame(self):
+        self.parent.frames[self.index]['frame_var'].destroy()
+        self.parent.frames[self.index]['frame_var'] = None
+        self.parent.frames[self.index]['created'] = False
+        self.parent.resize_frame()
 
 
-class Symbol(Frame):
-    def __init__(self, parent):
+class Alpha(Frame):
+    def __init__(self, parent, index):
         Frame.__init__(self, parent)
         self.pack(expand=True, fill=BOTH)
         self.parent = parent
         self.root = self.parent
 
-        self.symbol_label = None
-        self.symbol_entry = None
-        self.symbol_description = 'Enter the ticker symbol'
-        self.symbol_focused = False
-        self.create_symbol_widgets()
-        self.update_idletasks()
+        self.index = index
+        self.description = self.parent.get_val(self.index, 'description')
+        self.alpha_label = None
+        self.alpha_entry = None
 
-    def create_symbol_widgets(self):
-        self.symbol_label = Label(self, text="Symbol", width=15)
-        self.symbol_label.pack(side=LEFT, anchor=W)
+        self.create_alpha_widgets()
 
-        self.symbol_entry = Entry(self, textvariable=self.parent.symbol)
-        self.symbol_entry.insert(0, self.symbol_description)
-        self.symbol_entry.bind('<Enter>', self.symbol_entry_entered)
-        self.symbol_entry.bind('<Leave>', self.symbol_entry_left)
-        self.symbol_entry.bind('<FocusIn>', self.symbol_entry_focused)
-        self.symbol_entry.bind('<FocusOut>', self.symbol_entry_focused)
-        self.symbol_entry.bind('<KeyRelease>', self.symbol_entry_key_released)
+    def create_alpha_widgets(self):
+        self.alpha_label = Label(self, text="Symbol", width=15)
+        self.alpha_label.pack(side=LEFT, anchor=W)
 
-        self.symbol_entry.bind('<Insert>', lambda e: 'break')  # disable Insert
-        self.symbol_entry.bind('<Control-v>', lambda e: 'break')  # disable paste
-        self.symbol_entry.bind('<Control-y>', lambda e: 'break')  # disable uncommon undo (paste in tkinter)
-        self.symbol_entry.bind('<Button-3>', lambda e: 'break')  # disable right-click
-        self.symbol_entry.pack(side=LEFT, expand=True, fill=X)
+        self.alpha_entry = Entry(self, textvariable=self.parent.get_val(self.index, 'StringVar'))
+        self.alpha_entry.insert(0, self.description)
+        self.alpha_entry.bind('<Enter>', self.alpha_entry_entered)
+        self.alpha_entry.bind('<Leave>', self.alpha_entry_left)
+        self.alpha_entry.bind('<FocusIn>', self.alpha_entry_focus_in)
+        self.alpha_entry.bind('<FocusOut>', self.alpha_entry_focus_out)
+        self.alpha_entry.bind('<KeyRelease>', self.alpha_entry_key_released)
 
-    def symbol_entry_entered(self, _):
-        if self.symbol_entry.get() == self.symbol_description:
-            self.symbol_entry.delete(0, END)
+        self.alpha_entry.bind('<Insert>', lambda e: 'break')  # disable Insert
+        self.alpha_entry.bind('<Control-v>', lambda e: 'break')  # disable paste
+        self.alpha_entry.bind('<Control-y>', lambda e: 'break')  # disable uncommon undo (paste in tkinter)
+        self.alpha_entry.bind('<Button-3>', lambda e: 'break')  # disable right-click
+        self.alpha_entry.pack(side=LEFT, expand=True, fill=X)
 
-    def symbol_entry_left(self, _):
-        if not self.symbol_entry.get() and not self.symbol_focused:
-            self.symbol_entry.insert(0, self.symbol_description)
+    def alpha_entry_entered(self, _):
+        if self.alpha_entry.get() == self.description:
+            self.alpha_entry.delete(0, END)
 
-    def symbol_entry_focused(self, _):
-        self.symbol_focused = not self.symbol_focused
-        if not self.symbol_focused and not self.symbol_entry.get():
-            self.symbol_entry.insert(0, self.symbol_description)
+    def alpha_entry_left(self, _):
+        if self.parent.frame_with_focus is not self.index and not self.alpha_entry.get():
+            self.alpha_entry.insert(0, self.description)
 
-    def symbol_entry_key_released(self, event):
+    def alpha_entry_focus_in(self, _):
+        self.parent.frame_with_focus = self.index
+
+    def alpha_entry_focus_out(self, _):
+        if not self.alpha_entry.get():
+            self.alpha_entry.insert(0, self.description)
+
+    def alpha_entry_key_released(self, event):
         if (len(repr(event.char)) is 3 or event.char == '\\') and not 'a' <= event.char.lower() <= 'z':
             # Received invalid input: punctuation or digit"""
-            self.symbol_entry.delete(self.symbol_entry.index(INSERT) - 1)
+            self.alpha_entry.delete(self.alpha_entry.index(INSERT) - 1)
 
         self.delete_symbol_spaces()
 
-        curr_symbol = self.symbol_entry.get().upper()
+        curr_symbol = self.alpha_entry.get().upper()
 
         if 'a' <= event.char.lower() <= 'z':
             # Received valid alpha input [a-zA-Z], so clear the entry text and re-write in ALL CAPS
-            cursor_pos = self.symbol_entry.index(INSERT)
-            self.symbol_entry.delete(0, END)
-            self.symbol_entry.insert(0, curr_symbol)
-            self.symbol_entry.icursor(cursor_pos)
+            cursor_pos = self.alpha_entry.index(INSERT)
+            self.alpha_entry.delete(0, END)
+            self.alpha_entry.insert(0, curr_symbol)
+            self.alpha_entry.icursor(cursor_pos)
 
         if curr_symbol:
             # If at least one character remains
             if 'a' <= event.char.lower() <= 'z':
                 # If the last button received was valid
-                if len(self.symbol_entry.get()) > 4:
+                if len(self.alpha_entry.get()) > 4:
                     # If the length of the symbol is 5+, delete the last letter
-                    self.symbol_entry.delete(self.symbol_entry.index(END) - 1)
+                    self.alpha_entry.delete(self.alpha_entry.index(END) - 1)
                 print('Symbol:', curr_symbol)
 
             if file_helper.file_exists(curr_symbol.lower()):
@@ -186,69 +263,82 @@ class Symbol(Frame):
                 self.parent.populate_from_file()
             else:
                 # Else destroy all frames below symbol, but keep asset_type's Frame
-                self.parent.destroy_all_frames_after_symbol()
-                self.parent.create_asset_type_frame()
+                # self.parent.destroy_all_frames_after_symbol()
+                self.parent.create_next_frame(self.index + 1)
         else:
             # No characters remain in the symbol entry widget, ∴ destroy all children
-            self.parent.destroy_all_frames_after_symbol()
+            self.parent.destroy_all_frames_after(self.index)
 
     def delete_symbol_spaces(self):
-        space_position = self.symbol_entry.get().find(' ')
-        last_char_index = len(self.symbol_entry.get()) - 1
+        space_position = self.alpha_entry.get().find(' ')
+        last_char_index = len(self.alpha_entry.get()) - 1
 
         if space_position != -1:
             if space_position < last_char_index:
-                self.symbol_entry.delete(0, END)
+                self.alpha_entry.delete(0, END)
             elif space_position is last_char_index:
-                self.symbol_entry.delete(last_char_index)
+                self.alpha_entry.delete(last_char_index)
+
+    def destroy_frame(self):
+        self.parent.frames[self.index]['frame_var'].destroy()
+        self.parent.frames[self.index]['frame_var'] = None
+        self.parent.frames[self.index]['created'] = False
+        self.parent.frames[self.index]['StringVar'] = StringVar()
+        self.parent.resize_frame()
 
 
-class AssetType(Frame):
-    def __init__(self, parent):
+class Radio(Frame):
+    def __init__(self, parent, index):
         Frame.__init__(self, parent)
         self.pack(expand=True, fill=BOTH)
         self.parent = parent
 
-        self.asset_type_label = None
-        self.stock_button = None
-        self.crypto_button = None
+        self.index = index
+
+        self.radio_label = None
+        self.buttons = []
 
         self.create_asset_type_widgets()
 
     def create_asset_type_widgets(self):
-        self.asset_type_label = Label(self, text="Asset Type", width=15)
-        self.asset_type_label.pack(side=LEFT, anchor=W)
+        self.radio_label = Label(self, text="Asset Type", width=15)
+        self.radio_label.pack(side=LEFT, anchor=W)
 
-        self.stock_button = Radiobutton(self, text='stock', variable=self.parent.asset_type,
-                                        val='stock', command=self.select)
-        self.stock_button.pack(side=LEFT, anchor=W)
-
-        self.crypto_button = Radiobutton(self, text='crypto', variable=self.parent.asset_type,
-                                         val='cryptocurrency', command=self.select)
-        self.crypto_button.pack(side=LEFT, anchor=W)
+        for button_type in self.parent.frames[self.index]['buttons']:
+            button = Radiobutton(self, text=button_type, variable=self.parent.get_val(self.index, 'StringVar'),
+                                 val=button_type, command=self.select)
+            button.pack(side=LEFT, anchor=W)
+            self.buttons.append(button)
 
     def select(self):
-        self.parent.create_quantity_frame()
+        self.parent.create_next_frame(self.index + 1)
 
     def deselect_buttons(self):
-        self.stock_button.deselect()
-        self.crypto_button.deselect()
+        for i in range(len(self.buttons)):
+            self.buttons[i].deselect()
 
-        self.parent.reload_quantity_description()
+    def destroy_frame(self):
+        for button in self.buttons:
+            button.deselect()
+        self.parent.frames[self.index]['frame_var'].destroy()
+        self.parent.frames[self.index]['frame_var'] = None
+        self.parent.frames[self.index]['created'] = False
+        self.parent.frames[self.index]['StringVar'] = StringVar()
+        self.parent.resize_frame()
 
 
-class Quantity(Frame):
-    def __init__(self, parent):
+class Numeric(Frame):
+    def __init__(self, parent, index):
         Frame.__init__(self, parent)
         self.pack(expand=True, fill=BOTH)
         self.parent = parent
 
+        self.index = index
+        self.quantity_description = self.parent.get_val(self.index, 'description')
+
         self.quantity_label = None
         self.quantity_entry = None
-        self.quantity_description_basic = 'Enter the # of '
-        self.quantity_description = None
         self.quantity_focused = False
-        self.reload_description()
 
         self.create_quantity_widgets()
 
@@ -256,7 +346,7 @@ class Quantity(Frame):
         self.quantity_label = Label(self, text="Quantity", width=15)
         self.quantity_label.pack(side=LEFT, anchor=W)
 
-        self.quantity_entry = Entry(self, textvariable=self.parent.quantity)
+        self.quantity_entry = Entry(self, textvariable=self.parent.get_val(self.index, 'StringVar'))
         self.quantity_entry.insert(0, self.quantity_description)
         self.quantity_entry.bind('<Enter>', self.quantity_entry_entered)
         self.quantity_entry.bind('<Leave>', self.quantity_entry_left)
@@ -271,7 +361,7 @@ class Quantity(Frame):
         self.quantity_entry.pack(side=LEFT, expand=True, fill=X)
 
     def quantity_entry_entered(self, _):
-        if self.quantity_entry.get().find(self.quantity_description_basic) is not -1:
+        if self.quantity_entry.get().find(self.quantity_description) is not -1:
             self.quantity_entry.delete(0, END)
 
     def quantity_entry_left(self, _):
@@ -285,104 +375,101 @@ class Quantity(Frame):
 
     def quantity_entry_key_released(self, _):
         if self.quantity_entry.get():
-            self.parent.create_current_average_frame()
+            self.parent.create_next_frame(self.index + 1)
 
-    def reload_description(self):
-        self.quantity_description = self.quantity_description_basic
-        self.quantity_description += 'stocks' if self.parent.asset_type.get().lower()[0:1] == 's' else 'coins'
-        if self.quantity_entry:
-            if self.quantity_entry.get().find(self.quantity_description_basic) != -1:
-                self.quantity_entry.delete(0, END)
-                self.quantity_entry.insert(0, self.quantity_description)
+    def destroy_frame(self):
+        self.parent.frames[self.index]['frame_var'].destroy()
+        self.parent.frames[self.index]['frame_var'] = None
+        self.parent.frames[self.index]['created'] = False
+        self.parent.frames[self.index]['StringVar'] = StringVar()
+        self.parent.resize_frame()
 
 
-class CurrentAverage(Frame):
-    def __init__(self, parent):
+class Currency(Frame):
+    def __init__(self, parent, index):
         Frame.__init__(self, parent)
         self.pack(expand=True, fill=BOTH)
         self.parent = parent
 
-        self.current_average_label = None
-        self.current_average_entry = None
-        self.current_average_description = 'Enter your current Average'
-        self.current_average_focused = False
+        self.index = index
 
-        self.create_current_average_widgets()
+        self.disabled = self.parent.get_val(self.index, 'disabled')
+        self.money_frame_description = self.parent.get_val(self.index, 'description')
+        self.money_frame_focused = False
 
-    def create_current_average_widgets(self):
-        self.current_average_label = Label(self, text="Current Average", width=15)
-        self.current_average_label.pack(side=LEFT, anchor=W)
+        self.money_frame_label = None
+        self.money_frame_entry = None
 
-        self.current_average_entry = Entry(self, textvariable=self.parent.current_average)
-        self.current_average_entry.insert(0, self.current_average_description)
-        self.current_average_entry.bind('<Enter>', self.current_average_entry_entered)
-        self.current_average_entry.bind('<Leave>', self.current_average_entry_left)
-        self.current_average_entry.bind('<FocusIn>', self.current_average_entry_focused)
-        self.current_average_entry.bind('<FocusOut>', self.current_average_entry_focused)
-        self.current_average_entry.bind('<KeyRelease>', self.current_average_entry_key_released)
+        self.create_money_frame_widgets()
 
-        self.current_average_entry.bind('<Insert>', lambda e: 'break')  # disable Insert
-        self.current_average_entry.bind('<Control-v>', lambda e: 'break')  # disable paste
-        self.current_average_entry.bind('<Control-y>', lambda e: 'break')  # disable uncommon undo (paste in tkinter)
-        self.current_average_entry.bind('<Button-3>', lambda e: 'break')  # disable right-click
-        self.current_average_entry.pack(side=LEFT, expand=True, fill=X)
+    def create_money_frame_widgets(self):
+        self.money_frame_label = Label(self, text=self.parent.get_val(self.index, 'label'), width=15)
+        self.money_frame_label.pack(side=LEFT, anchor=W)
 
-    def current_average_entry_entered(self, _):
-        if self.current_average_entry.get().find(self.current_average_description) is not -1:
-            self.current_average_entry.delete(0, END)
+        self.money_frame_entry = Entry(self, textvariable=self.parent.get_val(self.index, 'StringVar'))
+        if self.disabled:
+            self.money_frame_entry.configure(state='readonly')
+        else:
+            self.money_frame_entry.insert(0, self.money_frame_description)
+        self.money_frame_entry.bind('<Enter>', self.money_frame_entry_entered)
+        self.money_frame_entry.bind('<Leave>', self.money_frame_entry_left)
+        self.money_frame_entry.bind('<FocusIn>', self.money_frame_entry_focused)
+        self.money_frame_entry.bind('<FocusOut>', self.money_frame_entry_focused)
+        self.money_frame_entry.bind('<KeyRelease>', self.money_frame_entry_key_released)
 
-    def current_average_entry_left(self, _):
-        if not self.current_average_focused:
-            if self.current_average_entry.get() == '$':
-                self.current_average_entry.delete(0, END)
-            if not self.current_average_entry.get():
-                self.current_average_entry.insert(0, self.current_average_description)
+        self.money_frame_entry.bind('<Insert>', lambda e: 'break')  # disable Insert
+        self.money_frame_entry.bind('<Control-v>', lambda e: 'break')  # disable paste
+        self.money_frame_entry.bind('<Control-y>', lambda e: 'break')  # disable uncommon undo (paste in tkinter)
+        self.money_frame_entry.bind('<Button-3>', lambda e: 'break')  # disable right-click
+        self.money_frame_entry.pack(side=LEFT, expand=True, fill=X)
 
-    def current_average_entry_focused(self, _):
-        self.current_average_focused = not self.current_average_focused
-        if not self.current_average_focused and not self.current_average_entry.get():
-            self.current_average_entry.insert(0, self.current_average_description)
-        elif self.current_average_focused and self.current_average_entry.get().find('$') is -1:
-            self.current_average_entry.insert(0, '$')
+    def money_frame_entry_entered(self, _):
+        if not self.disabled:
+            if self.money_frame_entry.get().find(self.money_frame_description) is not -1:
+                self.money_frame_entry.delete(0, END)
 
-    def current_average_entry_key_released(self, event):
-        if (len(repr(event.char)) is 3 or event.char == '\\') and not '0' <= event.char <= '9' and event.char != '.':
+    def money_frame_entry_left(self, _):
+        if not self.disabled:
+            if not self.money_frame_focused:
+                if self.money_frame_entry.get() == '$':
+                    self.money_frame_entry.delete(0, END)
+                if not self.money_frame_entry.get():
+                    self.money_frame_entry.insert(0, self.money_frame_description)
+
+    def money_frame_entry_focused(self, _):
+        if not self.disabled:
+            self.money_frame_focused = not self.money_frame_focused
+            if not self.money_frame_focused and self.money_frame_entry.get() == '$':
+                self.money_frame_entry.delete(0, 1)
+                self.money_frame_entry.insert(0, self.money_frame_description)
+            elif self.money_frame_focused and self.money_frame_entry.get().find('$') is -1:
+                self.money_frame_entry.insert(0, '$')
+
+    def money_frame_entry_key_released(self, event):
+        if (len(repr(event.char)) is 3 or event.char == '\\') and \
+                (not '0' <= event.char <= '9') and \
+                (event.char != '.'):
             # Received invalid input: non-period-punctuation or alpha"""
-            self.current_average_entry.delete(self.current_average_entry.index(INSERT) - 1)
+            self.money_frame_entry.delete(self.money_frame_entry.index(INSERT) - 1)
 
-        first_decimal_point = self.current_average_entry.get().find('.')
+        first_decimal_point = self.money_frame_entry.get().find('.')
         if first_decimal_point is not -1:
-            second_decimal_point = self.current_average_entry.get()[first_decimal_point + 1:].find('.')
+            second_decimal_point = self.money_frame_entry.get()[first_decimal_point + 1:].find('.')
             if second_decimal_point is not -1 and event.char == '.':
-                self.current_average_entry.delete(self.current_average_entry.index(INSERT) - 1)
+                self.money_frame_entry.delete(self.money_frame_entry.index(INSERT) - 1)
 
-        if self.current_average_entry.get().find('$') is not 0:
-            self.current_average_entry.insert(0, '$')
+        if self.money_frame_entry.get().find('$') is not 0:
+            self.money_frame_entry.insert(0, '$')
 
-        if self.current_average_entry.index(INSERT) is 0:
-            self.current_average_entry.icursor(1)
+        if self.money_frame_entry.index(INSERT) is 0:
+            self.money_frame_entry.icursor(1)
 
-        if len(self.current_average_entry.get()) > 1 and '0' <= event.char <= '9':
-            self.parent.create_potential_average_frame()
+        if len(self.money_frame_entry.get()) > 1 and '0' <= event.char <= '9':
+            self.parent.create_next_frame(self.index + 1)
 
-
-class PotentialAverage(Frame):
-    def __init__(self, parent):
-        Frame.__init__(self, parent)
-        self.pack(expand=True, fill=BOTH)
-        self.parent = parent
-
-        self.potential_average_label = None
-        self.potential_average_entry = None
-
-        self.create_potential_average_widgets()
-
-    def create_potential_average_widgets(self):
-        self.potential_average_label = Label(self, text="Potential Average", width=15)
-        self.potential_average_label.pack(side=LEFT, anchor=W)
-
-        self.potential_average_entry = Entry(self, state='readonly')
-        self.potential_average_entry.pack(side=LEFT, expand=True, fill=X)
-
-
-
+    def destroy_frame(self):
+        self.parent.frames[self.index]['frame_var'].destroy()
+        self.parent.frames[self.index]['frame_var'] = None
+        self.parent.frames[self.index]['created'] = False
+        self.parent.frames[self.index]['StringVar'] = StringVar()
+        self.parent.resize_frame()
