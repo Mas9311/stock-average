@@ -11,7 +11,7 @@ class TextBaseClass:
         while True:
             self.user_input = input(f'{self.message}.\n> {self.intro_char}').strip().lower()
             if self.input_is_valid():
-                self.assign_variable()
+                self.input = self.user_input
                 return
 
     def input_is_valid(self):
