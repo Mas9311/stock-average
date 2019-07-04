@@ -1,18 +1,112 @@
 from tkinter import *
-from sample import stock_average
-from sample.frames.Alpha import Alpha
-from sample.frames.Numeric import Numeric, Currency
-from sample.frames.TitleBar import TitleBar
-from sample.frames.Radio import Radio
+# from sample import format, file_helper, menu
+
+from sample.cli.Alpha import Alpha as cli_Alpha
+from sample.cli.Radio import Radio as cli_Radio
+from sample.cli.Numeric import Numeric as cli_Numeric, Currency as cli_Currency
+
+from sample.gui.TitleBar import TitleBar
+from sample.gui.Alpha import Alpha as gui_Alpha
+from sample.gui.Radio import Radio as gui_Radio
+from sample.gui.Numeric import Numeric as gui_Numeric, Currency as gui_Currency
 
 
 def run():
-    if True:  # parameter_passed != 'cli'
-        root = Tk()
-        GUI(root)
-        root.mainloop()
-    else:
-        stock_average.run()
+# def run(parameter_passed):
+#     if True:  # parameter_passed == 'gui':
+#         root = Tk()
+#         GUI(root)
+#         root.mainloop()
+#     else:
+        CLI()
+
+
+class CLI:
+    def __init__(self):
+        self.symbol = cli_Alpha('Enter the ticker symbol')
+        self.asset_type = cli_Radio(['stock', 'cryptocurrency'])
+        self.quantity = cli_Numeric('Enter the # of shares you own')
+        self.current_average = cli_Currency('Enter your current average')
+        self.current_price = cli_Currency('Enter the current market price')
+        self.allotted_money = cli_Currency('Enter the amount you willing to spend today')
+        self.potential_averages = []
+
+        self.run_cli()
+
+    def run_cli(self):
+        self.symbol.retrieve_input()
+        self.asset_type.retrieve_input()
+        self.quantity.retrieve_input()
+        self.current_average.retrieve_input()
+        self.current_price.retrieve_input()
+        self.allotted_money.retrieve_input()
+
+    #     file_helper.get_current_price(self.symbol)
+    #     while True:  # user wants to continue using the 'same' symbol
+    #         menu.update(my_stock)
+    #         original_avg = format.price(my_stock.average.avg(), my_stock.precision)
+    #         allotted_money = retrieve_money()
+    #         my_stock.set_allotted(allotted_money)
+    #         calculate_allotted(my_stock)
+    #
+    #         print(my_stock.allotted)
+    #         print(f'{format.Feedback(False, f"Compared to your current average of {original_avg}")}')
+    #
+    #         ending_input = menu.ending_menu(my_stock.get_symbol())
+    #         if ending_input is 'quit':
+    #             return  # user 'quit' the program
+    #         if ending_input is 'same':
+    #             pass
+    #         elif ending_input is 'different':
+    #             break
+    #
+    # def retrieve_input(self, message):
+    #     while True:
+    #         user_input = input(f'{message}?\n> ').strip().lower()
+    #         if self.is_valid_input(user_input):
+    #             return user_input
+    #
+    # def retrieve_money(self):
+    #     """Retrieves the user's allotted money they are willing to spend at the current price specified."""
+    #     while True:
+    #         user_input = input(f'How much money are you willing to spend today?\n').strip()
+    #         print('', end='\n')
+    #         try:
+    #             money = float(user_input)
+    #             if money < 1:
+    #                 pass
+    #             else:
+    #                 return money  # The only way to return is with a valid positive number >= !$
+    #         except ValueError:
+    #             pass
+    #         print(format.Feedback(True, [f'An input of \'{user_input}\' cannot be accepted.',
+    #                                      f'The allotted money must be a valid positive number >= {format.price(1,
+    #
+    # def calculate_allotted(self, my_stock):
+    #     """The user may not want to spend all of the money they designated,
+    #     so this will calculate the potential averages incrementally"""
+    #     while True:
+    #         iterations = int(my_stock.allotted.iterations)
+    #         if iterations <= 0:
+    #             if my_stock.crypto:
+    #                 greater_than = format.price(1, 2)
+    #             else:
+    #                 greater_than = format.price(my_stock.allotted.cost_per, my_stock.precision)
+    #             print(format.Feedback(True,
+    #                                   [f'{my_stock.allotted.allotted_money} is not enough to calculate a potential.',
+    #                                    f'Please input a number >= {greater_than}.']))
+    #             my_stock.set_allotted(retrieve_money())
+    #         else:
+    #             break
+    #     for curr_iter in range(1, int(iterations) + 1):
+    #         add_potential(my_stock, curr_iter)
+    #
+    # def add_potential(self, my_stock, curr_iter):
+    #     """This method adds a NewOutcome to the Average.selections list, and update the average accordingly.
+    #     Stocks add 1 to the denominator, while Cryptocurrencies add a fraction to the denominator."""
+    #     denominator = 1 if not my_stock.crypto else (my_stock.allotted.cost_per / my_stock.current_price)
+    #     my_stock.average.add_new(my_stock.allotted.cost_per, denominator)
+    #     my_stock.allotted.add_outcome(curr_iter, my_stock.allotted.cost_per * curr_iter, my_stock.average.avg())
 
 
 class GUI(Frame):
@@ -110,16 +204,16 @@ class GUI(Frame):
         return TitleBar(self, index)
 
     def _create_alpha_frame(self, index):
-        return Alpha(self, index)
+        return gui_Alpha(self, index)
 
     def _create_radio_frame(self, index):
-        return Radio(self, index)
+        return gui_Radio(self, index)
 
     def _create_numeric_frame(self, index):
-        return Numeric(self, index)
+        return gui_Numeric(self, index)
 
     def _create_currency_frame(self, index):
-        return Currency(self, index)
+        return gui_Currency(self, index)
 
     def _resize_frame(self):
         self.root.update_idletasks()

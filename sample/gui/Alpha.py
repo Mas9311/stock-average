@@ -1,6 +1,6 @@
 from tkinter import *
 from sample import file_helper
-from sample.frames.EntryBaseClass import EntryBaseClass
+from sample.gui.EntryBaseClass import EntryBaseClass
 
 
 class Alpha(EntryBaseClass):
@@ -31,7 +31,7 @@ class Alpha(EntryBaseClass):
          Else the char is a digit or punctuation: delete it in place. (doesn't move the cursor)
         If the textbox's last character is a space, delete it.
         If the textbox contains a space anywhere else: clear all text. (the description is present)
-        If no characters currently remain in the textbox: destroy all frames after this Frame.
+        If no characters currently remain in the textbox: destroy all gui after this Frame.
         Else the is at least one character: check if the file exists"""
         if self.parent.is_char_printable(event.char):
             # Received a printable character: {alpha || numeric || punctuation}
@@ -57,7 +57,7 @@ class Alpha(EntryBaseClass):
             else:
                 # Else the file does not exist
                 if self.last_text_entered != self.entry.get():
-                    # If the symbol has changed: destroy all frames below this Frame
+                    # If the symbol has changed: destroy all gui below this Frame
                     self.parent.destroy_all_frames_after(self.index)
                 self.parent.create_next_frame(self.index + 1)
 

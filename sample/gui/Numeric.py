@@ -1,5 +1,5 @@
 from tkinter import *
-from sample.frames.EntryBaseClass import EntryBaseClass
+from sample.gui.EntryBaseClass import EntryBaseClass
 
 
 class Numeric(EntryBaseClass):

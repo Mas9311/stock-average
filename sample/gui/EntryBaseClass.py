@@ -125,7 +125,7 @@ class EntryBaseClass(Frame):
 
     def _destroyed_for_empty_input(self):
         if self._is_empty():
-            # No characters remain in the symbol entry widget, ∴ destroy all further frames
+            # No characters remain in the symbol entry widget, ∴ destroy all further gui
             self.parent.destroy_all_frames_after(self.index)
             return True
         return False
