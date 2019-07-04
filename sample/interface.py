@@ -23,23 +23,41 @@ def run():
 
 class CLI:
     def __init__(self):
-        self.symbol = cli_Alpha('Enter the ticker symbol')
-        self.asset_type = cli_Radio(['stock', 'cryptocurrency'])
-        self.quantity = cli_Numeric('Enter the # of shares you own')
-        self.current_average = cli_Currency('Enter your current average')
-        self.current_price = cli_Currency('Enter the current market price')
-        self.allotted_money = cli_Currency('Enter the amount you willing to spend today')
+        self.symbol = cli_Alpha(self, 'Enter the ticker symbol')
+        self.symbol.retrieve_input()
+        self.asset_type = cli_Radio(self, ['stock', 'cryptocurrency'])
+        self.quantity = cli_Numeric(self, 'Enter the # of shares you own')
+        self.current_average = cli_Currency(self, 'Enter your current average')
+        self.current_price = cli_Currency(self, 'Enter the current market price')
+        self.allotted_money = cli_Currency(self, 'Enter the amount you willing to spend today')
         self.potential_averages = []
 
         self.run_cli()
 
     def run_cli(self):
-        self.symbol.retrieve_input()
         self.asset_type.retrieve_input()
         self.quantity.retrieve_input()
         self.current_average.retrieve_input()
         self.current_price.retrieve_input()
         self.allotted_money.retrieve_input()
+
+    def get_symbol(self):
+        return self.symbol.input.upper()
+
+    def get_asset_type(self):
+        return self.asset_type.input.upper()
+
+    def get_quantity(self):
+        return self.quantity.input
+
+    def get_current_average(self):
+        return self.current_average.input
+
+    def get_current_price(self):
+        return self.current_price.input
+
+    def get_allotted_money(self):
+        return self.allotted_money.input
 
     #     file_helper.get_current_price(self.symbol)
     #     while True:  # user wants to continue using the 'same' symbol
