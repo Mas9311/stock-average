@@ -1,5 +1,6 @@
 class TextBaseClass:
-    def __init__(self, message):
+    def __init__(self, parent, message):
+        self.parent = parent  # CLI instance
         self.message = message
         self.user_input = None  # unverified input
         self.input = None
@@ -10,7 +11,7 @@ class TextBaseClass:
         while True:
             self.user_input = input(f'{self.message}.\n> {self.intro_char}').strip().lower()
             if self.input_is_valid():
-                self.input = self.user_input
+                self.assign_variable()
                 return
 
     def input_is_valid(self):
