@@ -16,7 +16,7 @@ def get_file(stock_symbol):
 
 def modify_file(my_stock, selection):
     """This function is called once the user has selected to modify a given value of the stock."""
-    lines = get_parameters(my_stock.get_symbol().lower())
+    lines = retrieve_file_data(my_stock.get_symbol().lower())
     if selection == f'crypto':
         lines[0] = f'{my_stock.get_symbol()} is a cryptocurrency!' if my_stock.crypto else f''
     elif selection == f'purchased average':
@@ -52,9 +52,10 @@ def reread_quantity(my_stock):
         my_stock.purchased_quantity = format.best(float(lines[2]), my_stock.precision)
 
 
-def file_exists(stock_symbol):
+def file_exists(symbol):
     """Returns true if the file is already made and has valid values."""
-    file_path = get_file(stock_symbol)
+    symbol = symbol.lower()
+    file_path = get_file(symbol)
     if os.path.exists(file_path):
         with open(file_path, 'r') as f:
             lines = f.read().splitlines()
@@ -67,12 +68,23 @@ def file_exists(stock_symbol):
                     c_price = float(lines[3])
                     return p_price >= 0 and p_quantity >= 0 and c_price >= 0
                 except ValueError:
-                    print(format.Feedback(True, [f'One of the non-crypto lines in the {stock_symbol} '
+                    print(format.Feedback(True, [f'One lines in the {symbol} '
                                                  f'file is not a number.',
-                                                 f'The file, {stock_symbol} has been removed.',
-                                                 f'We will recreate the {stock_symbol} file now.']))
+                                                 f'The file, {symbol} has been removed.',
+                                                 f'We will recreate the {symbol} file now.']))
                     os.remove(file_path)
     return False
+
+
+def assign_file_data_to_variables(cli):
+    (asset_type, current_average, quantity, current_price) = retrieve_file_data(cli.get_symbol())
+    if asset_type.lower().count(cli.asset_type.valid_options[0]):
+        cli.asset_type.input = cli.asset_type.valid_options[0]
+    else:
+        cli.asset_type.input = cli.asset_type.valid_options[1]
+    cli.current_average.input = str(current_average)
+    cli.quantity.input = str(quantity)
+    cli.current_price.input = str(current_price)
 
 
 def make_file(stock_symbol):
@@ -116,14 +128,13 @@ def get_current_price(my_stock):
         modify_file(my_stock, f'current price')
 
 
-def get_parameters(stock_symbol):
+def retrieve_file_data(symbol):
     """Retrieves the stocks values from the input file.
     If the stock file does not exist, this will create one."""
     make_sure_dir_exists()
-    while not file_exists(stock_symbol):
-        make_file(stock_symbol)
+    symbol = symbol.lower()
 
-    with open(get_file(stock_symbol), 'r') as stock_file:
+    with open(get_file(symbol), 'r') as stock_file:
         lines = stock_file.read().splitlines()
         stock_file.close()
 
