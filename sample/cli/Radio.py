@@ -1,3 +1,4 @@
+from sample import menu
 from .TextBaseClass import TextBaseClass
 
 
@@ -11,24 +12,28 @@ class Radio(TextBaseClass):
         super().__init__(parent, message)
         self.message = message
         self.valid_options = valid_options
-        self.valid_chars = [('1', f'{len(self.valid_options)}')]
+        self.valid_chars = [('0', f'{len(self.valid_options) - 1}')]
 
     def create_message(self):
-        self.message = f'Is {self.parent.get_symbol()} a '
-        for option_index in range(len(self.valid_options)):
-            self.message += f'{self.valid_options[option_index]}'
-            if option_index is not len(self.valid_options) - 1:
-                self.message += ' or '
+        description = f'Is {self.parent.get_symbol()} a '
+        for index in range(len(self.valid_options)):
+            description += self.valid_options[index]
+            if index is not len(self.valid_options) - 1:
+                description += ' or '
             else:
-                self.message += '?\n'
+                description += '?'
 
-        for option_index in range(len(self.valid_options)):
-            self.message += f' [{option_index + 1}] for {self.valid_options[option_index]}'
-            if option_index is not len(self.valid_options) - 1:
-                self.message += '.\n'
+        self.message = menu.create_menu_output(
+            description,
+            [f'for {opt}' for opt in self.valid_options]
+        )
 
     def input_in_valid_length(self):
-        if len(self.user_input) is not 1:
+        if len(self.user_input) is 0:
+            # user selected first option, index [0]
+            self.user_input = str(0)
+            return True
+        if len(self.user_input) > 1:
             print('Invalid: input is too long.')
             return False
         return True
