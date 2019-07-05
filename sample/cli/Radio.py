@@ -14,17 +14,18 @@ class Radio(TextBaseClass):
         self.valid_options = valid_options
         self.valid_chars = [('0', f'{len(self.valid_options) - 1}')]
 
+    def ask_message(self):
+        self.user_input = input(f'{self.message}> ').strip()
+
     def create_message(self):
         description = f'Is {self.parent.get_symbol()} a '
         for index in range(len(self.valid_options)):
             description += self.valid_options[index]
             if index is not len(self.valid_options) - 1:
                 description += ' or '
-            else:
-                description += '?'
 
         self.message = menu.create_menu_output(
-            description,
+            f'{description}?',
             [f'for {opt}' for opt in self.valid_options]
         )
 

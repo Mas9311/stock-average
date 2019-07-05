@@ -4,9 +4,7 @@ from sample import format, modify_stock
 def create_menu_output(description, options):
     menu_output = f'{description}\n [Enter] {options[0]}.\n'
     for index in range(1, len(options)):
-        menu_output += f' [{index}] {options[index]}'
-        if index is not len(options) - 1:
-            menu_output += '.\n'
+        menu_output += f' [{index}] {options[index]}.\n'
     return menu_output
 
 
@@ -81,7 +79,6 @@ def update(cli):
                 selection = int(selection)
                 if selection is 0:
                     # user selected to quit file modification
-                    print()
                     return
                 if 1 <= selection <= 4:
                     # The only way to continue is with a valid number between 1 and 4
