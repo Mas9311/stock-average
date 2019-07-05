@@ -1,5 +1,5 @@
 from tkinter import *
-# from sample import format, file_helper, menu
+from sample import format, file_helper, menu
 
 from sample.cli.Alpha import Alpha as cli_Alpha
 from sample.cli.Radio import Radio as cli_Radio
@@ -24,7 +24,9 @@ def run():
 class CLI:
     def __init__(self):
         self.symbol = cli_Alpha(self, 'Enter the ticker symbol')
+        # if symbol was not passed in parameters
         self.symbol.retrieve_input()
+        # else populate from parameters
         self.asset_type = cli_Radio(self, ['stock', 'cryptocurrency'])
         self.quantity = cli_Numeric(self, 'Enter the # of shares you own')
         self.current_average = cli_Currency(self, 'Enter your current average')
@@ -35,17 +37,24 @@ class CLI:
         self.run_cli()
 
     def run_cli(self):
-        self.asset_type.retrieve_input()
-        self.quantity.retrieve_input()
-        self.current_average.retrieve_input()
-        self.current_price.retrieve_input()
+        if not file_helper.file_exists(self.get_symbol().lower()):
+            self.asset_type.retrieve_input()
+            self.quantity.retrieve_input()
+            self.current_average.retrieve_input()
+            # if current_price was not passed in parameters
+            self.current_price.retrieve_input()
+            # else assign to variable
+        else:
+            file_helper.assign_file_data_to_variables(self)
+            # if current_price was passed in parameters: assign to variable
+        menu.update(self)
         self.allotted_money.retrieve_input()
 
     def get_symbol(self):
         return self.symbol.input.upper()
 
     def get_asset_type(self):
-        return self.asset_type.input.upper()
+        return self.asset_type.input
 
     def get_quantity(self):
         return self.quantity.input
@@ -59,24 +68,30 @@ class CLI:
     def get_allotted_money(self):
         return self.allotted_money.input
 
-    #     file_helper.get_current_price(self.symbol)
-    #     while True:  # user wants to continue using the 'same' symbol
-    #         menu.update(my_stock)
-    #         original_avg = format.price(my_stock.average.avg(), my_stock.precision)
-    #         allotted_money = retrieve_money()
-    #         my_stock.set_allotted(allotted_money)
-    #         calculate_allotted(my_stock)
+    def __str__(self):
+        """Returns the stock in string format."""
+        return (f'{self.get_symbol()}, the {self.get_asset_type()}:\n'
+                f'\tYou previously purchased {self.get_quantity()} shares.\n'
+                f'\tYou have a current average of ${self.get_current_average()}.\n'
+                f'\tThe current market price of {self.get_symbol()} is ${self.get_current_price()}.\n')
+
+    # while True:  # user wants to continue using the 'same' symbol
+    #     menu.update(my_stock)
+    #     original_avg = format.price(my_stock.average.avg(), my_stock.precision)
+    #     allotted_money = retrieve_money()
+    #     my_stock.set_allotted(allotted_money)
+    #     calculate_allotted(my_stock)
     #
-    #         print(my_stock.allotted)
-    #         print(f'{format.Feedback(False, f"Compared to your current average of {original_avg}")}')
+    #     print(my_stock.allotted)
+    #     print(f'{format.Feedback(False, f"Compared to your current average of {original_avg}")}')
     #
-    #         ending_input = menu.ending_menu(my_stock.get_symbol())
-    #         if ending_input is 'quit':
-    #             return  # user 'quit' the program
-    #         if ending_input is 'same':
-    #             pass
-    #         elif ending_input is 'different':
-    #             break
+    #     ending_input = menu.ending_menu(my_stock.get_symbol())
+    #     if ending_input is 'quit':
+    #         return  # user 'quit' the program
+    #     if ending_input is 'same':
+    #         pass
+    #     elif ending_input is 'different':
+    #         break
     #
     # def retrieve_input(self, message):
     #     while True:
