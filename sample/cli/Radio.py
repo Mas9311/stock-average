@@ -32,3 +32,6 @@ class Radio(TextBaseClass):
             print('Invalid: input is too long.')
             return False
         return True
+
+    def assign_to_variable(self):
+        self.input = self.valid_options[int(self.user_input)]
