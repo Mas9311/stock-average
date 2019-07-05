@@ -8,11 +8,15 @@ class TextBaseClass:
         self.intro_char = ''
 
     def retrieve_input(self):
-        while True:
-            self.user_input = input(f'{self.message}.\n> {self.intro_char}').strip().lower()
-            if self.input_is_valid():
-                self.input = self.user_input
-                return
+        if not self.input:
+            while True:
+                self.user_input = input(f'{self.message}.\n> {self.intro_char}').strip().lower()
+                if self.input_is_valid():
+                    self.assign_to_variable()
+                    return
+
+    def assign_to_variable(self):
+        self.input = self.user_input
 
     def input_is_valid(self):
         if not self.input_in_valid_length():
