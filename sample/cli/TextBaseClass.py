@@ -10,10 +10,13 @@ class TextBaseClass:
     def retrieve_input(self):
         if not self.input:
             while True:
-                self.user_input = input(f'{self.message}.\n> {self.intro_char}').strip().lower()
+                self.ask_message()
                 if self.input_is_valid():
                     self.assign_to_variable()
                     return
+
+    def ask_message(self):
+        self.user_input = input(f'{self.message}.\n> {self.intro_char}').strip().lower()
 
     def assign_to_variable(self):
         self.input = self.user_input
