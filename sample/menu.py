@@ -4,7 +4,9 @@ from sample import format, modify_stock
 def create_menu_output(description, options):
     menu_output = f'{description}\n [Enter] {options[0]}.\n'
     for index in range(1, len(options)):
-        menu_output += f' [{index}] {options[index]}.\n'
+        menu_output += f' [{index}] {options[index]}'
+        if index is not len(options) - 1:
+            menu_output += '.\n'
     return menu_output
 
 
@@ -15,16 +17,22 @@ def ask_options(description, options):
     last_index = len(options) - 1
     menu_output = create_menu_output(description, options)
     while True:
+        # while input is not valid: keep asking
         output = input(f'{menu_output}> ').strip()
         if not output:
             # user selected the first option: nothing [Enter]ed
-            return None
-        if len(options) is 2:
+            print()
+            return 0
+        elif len(options) is 2:
             # only two options: return the numerical index regardless of what the user typed
+            print()
             return last_index
         try:
             output = int(output)
-            if 1 <= output <= last_index:
+            if output is 0:
+                return 0
+            elif 1 <= output <= last_index:
+                print()
                 return output
             else:
                 print('Invalid:', output, f'is not in valid range [1, {last_index}].\n')
@@ -35,9 +43,13 @@ def ask_options(description, options):
 def modify_menu(cli):
     """Prints the initial menu to determine if the user wants to modify any of the values printed."""
     print(cli)
-    output = ask_options(f'Would you like to update any of the values listed for {cli.get_symbol()}?',
-                       ['to skip this step', 'to modify a value'])
-    print()
+    output = ask_options(
+        f'Do you wish to modify any of the values listed for {cli.get_symbol()}?',
+        [
+            'to skip this step',
+            'to modify a value'
+        ]
+    )
     return output
 
 
@@ -45,7 +57,7 @@ def update_menu(cli):
     """The user has selected to modify a value. Which value to modify?"""
     mod = 'to modify the '
     output = ask_options(
-        'Select the option that you wish to modify from the list below:',
+        'Enter the option that you wish to modify from the list below:',
         [
             'to return',
             f'{mod}Asset type:         {cli.asset_type.input}',
@@ -67,6 +79,10 @@ def update(cli):
             try:
                 selection = update_menu(cli)
                 selection = int(selection)
+                if selection is 0:
+                    # user selected to quit file modification
+                    print()
+                    return
                 if 1 <= selection <= 4:
                     # The only way to continue is with a valid number between 1 and 4
                     print()
