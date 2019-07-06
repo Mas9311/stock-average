@@ -12,8 +12,7 @@ from sample.gui.Numeric import Numeric as gui_Numeric, Currency as gui_Currency
 
 
 def run():
-# def run(parameter_passed):
-#     if True:  # parameter_passed == 'gui':
+#     if parameter['interface'] == 'gui':
 #         root = Tk()
 #         GUI(root)
 #         root.mainloop()
@@ -37,24 +36,33 @@ class CLI:
         self.run_cli()
 
     def run_cli(self):
-        if not file_helper.file_exists(self.get_symbol().lower()):
+        if not file_helper.file_exists(self.get_symbol()):
+            print(f'The {self.get_symbol()} file is not in the symbols folder.\n')
             self.asset_type.retrieve_input()
             self.quantity.retrieve_input()
             self.current_average.retrieve_input()
             # if current_price was not passed in parameters
             self.current_price.retrieve_input()
             # else assign to variable
+            file_helper.create_new_file(self)
         else:
             file_helper.assign_file_data_to_variables(self)
             # if current_price was passed in parameters: assign to variable
         menu.update(self)
         self.allotted_money.retrieve_input()
+        # calculate potential_averages
 
     def get_symbol(self):
-        return self.symbol.input.upper()
+        return self.symbol.input
 
     def get_asset_type(self):
         return self.asset_type.input
+
+    def get_asset_noun(self):
+        s = ''
+        if float(self.get_quantity()) != 1:
+            s = 's'
+        return f'share{s}' if self.get_asset_type() == 'stock' else f'coin{s}'
 
     def get_quantity(self):
         return self.quantity.input
@@ -70,51 +78,11 @@ class CLI:
 
     def __str__(self):
         """Returns the stock in string format."""
-        return (f'{self.get_symbol()}, the {self.get_asset_type()}:\n'
-                f'\tYou previously purchased {self.get_quantity()} shares.\n'
-                f'\tYou have a current average of ${self.get_current_average()}.\n'
-                f'\tThe current market price of {self.get_symbol()} is ${self.get_current_price()}.\n')
+        return (f'{self.symbol}, the {self.asset_type}:\n'
+                f'\tYou previously purchased {self.quantity} {self.get_asset_noun()} of {self.symbol}.\n'
+                f'\tYour current average of {self.symbol} is {self.current_average}.\n'
+                f'\t{self.symbol}\'s current market price is {self.current_price}.\n')
 
-    # while True:  # user wants to continue using the 'same' symbol
-    #     menu.update(my_stock)
-    #     original_avg = format.price(my_stock.average.avg(), my_stock.precision)
-    #     allotted_money = retrieve_money()
-    #     my_stock.set_allotted(allotted_money)
-    #     calculate_allotted(my_stock)
-    #
-    #     print(my_stock.allotted)
-    #     print(f'{format.Feedback(False, f"Compared to your current average of {original_avg}")}')
-    #
-    #     ending_input = menu.ending_menu(my_stock.get_symbol())
-    #     if ending_input is 'quit':
-    #         return  # user 'quit' the program
-    #     if ending_input is 'same':
-    #         pass
-    #     elif ending_input is 'different':
-    #         break
-    #
-    # def retrieve_input(self, message):
-    #     while True:
-    #         user_input = input(f'{message}?\n> ').strip().lower()
-    #         if self.is_valid_input(user_input):
-    #             return user_input
-    #
-    # def retrieve_money(self):
-    #     """Retrieves the user's allotted money they are willing to spend at the current price specified."""
-    #     while True:
-    #         user_input = input(f'How much money are you willing to spend today?\n').strip()
-    #         print('', end='\n')
-    #         try:
-    #             money = float(user_input)
-    #             if money < 1:
-    #                 pass
-    #             else:
-    #                 return money  # The only way to return is with a valid positive number >= !$
-    #         except ValueError:
-    #             pass
-    #         print(format.Feedback(True, [f'An input of \'{user_input}\' cannot be accepted.',
-    #                                      f'The allotted money must be a valid positive number >= {format.price(1,
-    #
     # def calculate_allotted(self, my_stock):
     #     """The user may not want to spend all of the money they designated,
     #     so this will calculate the potential averages incrementally"""
