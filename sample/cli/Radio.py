@@ -30,8 +30,8 @@ class Radio(TextBaseClass):
         )
 
     def input_in_valid_length(self):
-        if len(self.user_input) is 0:
-            # user selected first option, index [0]
+        if not len(self.user_input):
+            # user selected first option by [Enter]ing '': index=0
             self.user_input = str(0)
             return True
         if len(self.user_input) > 1:
@@ -41,3 +41,6 @@ class Radio(TextBaseClass):
 
     def assign_to_variable(self):
         self.input = self.valid_options[int(self.user_input)]
+
+    def __str__(self):
+        return f'{self.input}'

@@ -36,8 +36,11 @@ class Numeric(TextBaseClass):
             # 3.0 => 3
             self.user_input = int(self.user_input)
 
-        # convert the number back to a string
-        self.user_input = str(self.user_input)
+    def __str__(self):
+        number = float(self.input)
+        if number == int(number):
+            number = int(number)
+        return f'{number}'
 
 
 class Currency(Numeric):
@@ -48,5 +51,9 @@ class Currency(Numeric):
     def convert_to_number(self):
         """Modifies the user_input to """
         self.user_input = str(float(self.user_input))
-        for i in range(len(self.user_input) - 1 - self.user_input.find('.')):
-            self.user_input += '0'
+
+    def __str__(self):
+        money = str(float(self.input))
+        for i in range(len(money) - 1 - money.find('.')):
+            money += '0'
+        return f'${money}'

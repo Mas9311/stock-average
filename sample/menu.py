@@ -1,4 +1,4 @@
-from sample import format, modify_stock
+from sample import file_helper, format
 
 
 def create_menu_output(description, options):
@@ -10,15 +10,13 @@ def create_menu_output(description, options):
 
 def ask_options(description, options):
     """Prints how to receive input from the user."""
-    # if isinstance(options, str):
-    #     options = [options]
     last_index = len(options) - 1
     menu_output = create_menu_output(description, options)
     while True:
         # while input is not valid: keep asking
         output = input(f'{menu_output}> ').strip()
-        if not output:
-            # user selected the first option: nothing [Enter]ed
+        if not output or output == str(0):
+            # user selected the first option: nothing [Enter]ed || '0'
             print()
             return 0
         elif len(options) is 2:
@@ -27,9 +25,7 @@ def ask_options(description, options):
             return last_index
         try:
             output = int(output)
-            if output is 0:
-                return 0
-            elif 1 <= output <= last_index:
+            if 1 <= output <= last_index:
                 print()
                 return output
             else:
@@ -58,10 +54,10 @@ def update_menu(cli):
         'Enter the option that you wish to modify from the list below:',
         [
             'to return',
-            f'{mod}Asset type:         {cli.asset_type.input}',
-            f'{mod}Quantity:           {cli.quantity.input}',
-            f'{mod}Current average:    ${cli.current_average.input}',
-            f'{mod}Current price:      ${cli.current_price.input}'
+            f'{mod}Asset type:         {cli.asset_type}',
+            f'{mod}Quantity:           {cli.quantity}',
+            f'{mod}Current average:    {cli.current_average}',
+            f'{mod}Current price:      {cli.current_price}'
         ]
     )
     return output
@@ -78,11 +74,10 @@ def update(cli):
                 selection = update_menu(cli)
                 selection = int(selection)
                 if selection is 0:
-                    # user selected to quit file modification
+                    # user selected to quit CLI modification
                     return
                 if 1 <= selection <= 4:
                     # The only way to continue is with a valid number between 1 and 4
-                    print()
                     break
                 print(format.Feedback(True, f'\'{selection}\' must be an option between 1 and 4.'))
             except ValueError:
@@ -91,20 +86,28 @@ def update(cli):
                 print(format.Feedback(True, f'The selection cannot be left blank.'))
 
         # user has input a number between [1, 4]
-        modify_stock.switcher(convert_selection_update(selection), cli)
-        # continue: ask user again if they want to modify any variables
+        update_selected_option(selection, cli)
+        # continue while loop: ask user (again) if they wish to modify any CLI variables
 
 
-def convert_selection_update(selection):
-    """Converts the integer to a string as to not confuse those that review the code."""
+def update_selected_option(selection, cli):
+    """Clears the variable's input and re-asks the question
+    based upon which value the the user wishes to modify.
+    It then updates the formatting of the stock
+    and writes the new changes to the given stock's file"""
     if selection is 1:
-        return f'asset type'
+        selection = 'asset type'
+        cli.asset_type.reset_and_ask_question()
     elif selection is 2:
-        return f'quantity'
+        selection = 'quantity'
+        cli.quantity.reset_and_ask_question()
     elif selection is 3:
-        return f'current average'
+        selection = 'current average'
+        cli.current_average.reset_and_ask_question()
     elif selection is 4:
-        return f'current price'
+        selection = 'current price'
+        cli.current_price.reset_and_ask_question()
+    file_helper.modify_file(cli, selection)
 
 
 def ending_menu(symbol):

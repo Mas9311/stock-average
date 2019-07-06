@@ -3,9 +3,13 @@ class TextBaseClass:
         self.parent = parent  # CLI instance
         self.message = message
         self.user_input = None  # unverified input
-        self.input = None
+        self.input = None  # stored once verified as valid
         self.valid_chars = None
         self.intro_char = ''
+
+    def reset_and_ask_question(self):
+        self.input = None
+        self.retrieve_input()
 
     def retrieve_input(self):
         if not self.input:
