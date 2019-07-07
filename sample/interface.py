@@ -53,7 +53,7 @@ class CLI:
         # calculate potential_averages
 
     def get_symbol(self):
-        return self.symbol.input
+        return self.symbol.input.upper()
 
     def get_asset_type(self):
         return self.asset_type.input
