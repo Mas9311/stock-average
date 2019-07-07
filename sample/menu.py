@@ -96,18 +96,14 @@ def update_selected_option(selection, cli):
     It then updates the formatting of the stock
     and writes the new changes to the given stock's file"""
     if selection is 1:
-        selection = 'asset type'
         cli.asset_type.reset_and_ask_question()
     elif selection is 2:
-        selection = 'quantity'
         cli.quantity.reset_and_ask_question()
     elif selection is 3:
-        selection = 'current average'
         cli.current_average.reset_and_ask_question()
     elif selection is 4:
-        selection = 'current price'
         cli.current_price.reset_and_ask_question()
-    file_helper.modify_file(cli, selection)
+    file_helper.modify_file(cli)
 
 
 def ending_menu(symbol):
