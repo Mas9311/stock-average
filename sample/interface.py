@@ -1,5 +1,7 @@
 from tkinter import *
-from sample import format, file_helper, menu
+from math import sqrt
+from sample import file_helper, menu
+from sample.average import PotentialAverage
 
 from sample.cli.Alpha import Alpha as cli_Alpha
 from sample.cli.Radio import Radio as cli_Radio
@@ -31,7 +33,7 @@ class CLI:
         self.current_average = cli_Currency(self, 'Enter your current average')
         self.current_price = cli_Currency(self, 'Enter the current market price')
         self.allotted_money = cli_Currency(self, 'Enter the amount you willing to spend today')
-        self.potential_averages = []
+        self.potential_averages = []  # list of PotentialAverage instances
 
         self.run_cli()
 
@@ -49,8 +51,45 @@ class CLI:
             file_helper.assign_file_data_to_variables(self)
             # if current_price was passed in parameters: assign to variable
         menu.update(self)
-        self.allotted_money.retrieve_input()
-        # calculate potential_averages
+        self.retrieve_allotted_money()
+        self.potential_averages = []
+        self.calculate_potentials()
+        for potential_average in self.potential_averages:
+            print(potential_average)
+
+    def calculate_potentials(self):
+        """The user may not want to spend all of the money they designated,
+        so this will calculate the potential averages incrementally"""
+        if self.get_asset_type() == 'stock':
+            # set number of iteration using integer division: "How many shares you can buy"
+            iterations = self.get_allotted_money() // self.get_current_price()
+            cost_per = self.get_current_price() / iterations
+            print('You can buy', iterations, 'shares of', self.get_symbol())
+        else:
+            iterations = int(sqrt(self.get_allotted_money()))
+            cost_per = self.get_allotted_money() / iterations
+
+        for curr_iter in range(iterations):
+            self.potential_averages.append(PotentialAverage(self, curr_iter + 1, cost_per))
+
+    def retrieve_allotted_money(self):
+        while True:
+            self.allotted_money.reset_and_ask_question()
+            if self.get_allotted_money() >= 1.00:
+                # user has designated more than a dollar
+                if self.get_asset_type() == 'stock':
+                    # this symbol is a stock
+                    if self.get_allotted_money() > self.get_current_price():
+                        # user can buy one or more shares (in multiples of integers)
+                        return
+                    else:
+                        # cannot buy a single share with the allotted money
+                        print(f'Invalid: Allotted money must be greater than {self.current_price}.\n')
+                else:
+                    # this symbol is a crypto: user can buy a fraction of a crypto coin.
+                    return
+            else:
+                print('Invalid: Allotted money must be greater than $0.99.\n')
 
     def get_symbol(self):
         return self.symbol.input.upper()
@@ -58,7 +97,7 @@ class CLI:
     def get_asset_type(self):
         return self.asset_type.input
 
-    def get_asset_noun(self):
+    def get_type(self):
         s = ''
         if float(self.get_quantity()) != 1:
             s = 's'
@@ -74,40 +113,14 @@ class CLI:
         return self.current_price.input
 
     def get_allotted_money(self):
-        return self.allotted_money.input
+        return float(self.allotted_money.input)
 
     def __str__(self):
         """Returns the stock in string format."""
         return (f'{self.symbol}, the {self.asset_type}:\n'
-                f'\tYou previously purchased {self.quantity} {self.get_asset_noun()} of {self.symbol}.\n'
+                f'\tYou previously purchased {self.quantity} {self.get_type()} of {self.symbol}.\n'
                 f'\tYour current average of {self.symbol} is {self.current_average}.\n'
                 f'\t{self.symbol}\'s current market price is {self.current_price}.\n')
-
-    # def calculate_allotted(self, my_stock):
-    #     """The user may not want to spend all of the money they designated,
-    #     so this will calculate the potential averages incrementally"""
-    #     while True:
-    #         iterations = int(my_stock.allotted.iterations)
-    #         if iterations <= 0:
-    #             if my_stock.crypto:
-    #                 greater_than = format.price(1, 2)
-    #             else:
-    #                 greater_than = format.price(my_stock.allotted.cost_per, my_stock.precision)
-    #             print(format.Feedback(True,
-    #                                   [f'{my_stock.allotted.allotted_money} is not enough to calculate a potential.',
-    #                                    f'Please input a number >= {greater_than}.']))
-    #             my_stock.set_allotted(retrieve_money())
-    #         else:
-    #             break
-    #     for curr_iter in range(1, int(iterations) + 1):
-    #         add_potential(my_stock, curr_iter)
-    #
-    # def add_potential(self, my_stock, curr_iter):
-    #     """This method adds a NewOutcome to the Average.selections list, and update the average accordingly.
-    #     Stocks add 1 to the denominator, while Cryptocurrencies add a fraction to the denominator."""
-    #     denominator = 1 if not my_stock.crypto else (my_stock.allotted.cost_per / my_stock.current_price)
-    #     my_stock.average.add_new(my_stock.allotted.cost_per, denominator)
-    #     my_stock.allotted.add_outcome(curr_iter, my_stock.allotted.cost_per * curr_iter, my_stock.average.avg())
 
 
 class GUI(Frame):
