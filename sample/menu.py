@@ -38,7 +38,7 @@ def modify_menu(cli):
     """Prints the initial menu to determine if the user wants to modify any of the values printed."""
     print(cli)
     output = ask_options(
-        f'Do you wish to modify any of the values listed for {cli.get_symbol()}?',
+        f'Do you wish to modify any of the values listed for {cli.get("symbol")}?',
         [
             'to skip this step',
             'to modify a value'
@@ -54,10 +54,10 @@ def update_menu(cli):
         'Enter the option that you wish to modify from the list below:',
         [
             'to return',
-            f'{mod}Asset type:         {cli.asset_type}',
+            f'{mod}Asset type:         \'{cli.asset_type}\'',
             f'{mod}Quantity:           {cli.quantity}',
             f'{mod}Current average:    {cli.current_average}',
-            f'{mod}Current price:      {cli.current_price}'
+            f'{mod}Market price:       {cli.market_price}'
         ]
     )
     return output
@@ -103,7 +103,7 @@ def update_selected_option(selection, cli):
         cli.current_average.reset_and_ask_question()
     elif selection is 4:
         cli.current_price.reset_and_ask_question()
-    file_helper.modify_file(cli)
+    file_helper.export_to_file(cli.arg_dict)
 
 
 def ending_menu(symbol):
