@@ -1,14 +1,13 @@
-import argparse, time
-
-from sample.format import py_cmd
+import argparse
+import platform
+import time
 
 
 def default_configurations():
     return {
-        'interface': True,          # True=GUI interface, False=CLI interface
-        'symbol': None,             # No default symbol
-        'asset_type': None,         # 'stock' || 'cryptocurrency'
-        'current_price': None,      # No default current_price
+        'interface': True,      # True=GUI interface, False=CLI interface
+        'symbol': None,         # No default symbol
+        'market_price': None    # No default market_price
     }
 
 
@@ -23,29 +22,27 @@ def retrieve_parameters():
     If no arguments are passed, then print the intro Welcome screen."""
 
     version_description = (
-        '           ☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐           \n'
-        '           ☐              ☐  stock-average v2.0.0  ☐              ☐           \n'
-        '           ☐              ☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐              ☐           \n'
-        '           ☐                                                      ☐           \n'
-        '           ☐ Check out if there are any new releases for this at: ☐           \n'
-        '           ☐   https://github.com/Mas9311/stock-average/releases  ☐           \n'
-        '           ☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐           '
+        '        ☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐           \n'
+        '        ☐              ☐  stock-average v2.0.0  ☐              ☐           \n'
+        '        ☐              ☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐              ☐           \n'
+        '        ☐                                                      ☐           \n'
+        '        ☐   Check if there are any new releases for this at:   ☐           \n'
+        '        ☐   https://github.com/Mas9311/stock-average/releases  ☐           \n'
+        '        ☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐☐           '
     )
 
     default = default_configurations()
 
     cmd_description = (
-        '  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓   \n'
-        '  ┃                                                                       ┃   \n'
-        '  ┃         ╔═══════════════════════════════════════════════════╗         ┃   \n'
-        '  ┃         ║   Find your potential average of a stock/crypto   ║         ┃   \n'
-        '  ┃         ╚═══════════════════════════════════════════════════╝         ┃   \n'
-        '  ┃                                                                       ┃   \n'
-        '  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   '
+        '            ╔═══════════════════════════════════════════════════╗         ┃   \n'
+        '            ║   Find your potential average of a stock/crypto   ║         ┃   \n'
+        '            ╚═══════════════════════════════════════════════════╝         ┃   \n'
+        '                                                                          ┃   \n'
+        '  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   '
     )
 
     parser = argparse.ArgumentParser(
-        usage=py_cmd('[options]'),
+        usage=py_cmd('[options]') + '                                        ┃',
         description=cmd_description,
         add_help=False,
         formatter_class=argparse.RawDescriptionHelpFormatter
@@ -77,22 +74,11 @@ def retrieve_parameters():
     )
 
     parser.add_argument(
-        '-t', '--type',
-        type=str,
-        default=default['asset_type'],
-        metavar='',
-        dest='asset_type',
-        choices=asset_type_choices(),
-        help=('Asset TYPE of the symbol.                                    '
-              'Valid choices are [%(choices)s]')
-    )
-
-    parser.add_argument(
         '-p', '--price',
         type=float,
-        default=default['current_price'],
+        default=default['market_price'],
         metavar='',
-        dest='current_price',
+        dest='market_price',
         help='Current market PRICE of the symbol.'
     )
 
@@ -112,18 +98,27 @@ def retrieve_parameters():
 
     known_args, unknown_args = parser.parse_known_args()
 
-    # converts the arguments from a Namespace type => dictionary type
-    arg_dict = {
-        'interface': known_args.interface,
-        'symbol': known_args.symbol,
-        'asset_type': known_args.asset_type,
-        'current_price': known_args.current_price,
-    }
-
     if unknown_args:  # user added unknown arguments
         print(f'Unknown arguments detected: {str(unknown_args)}\n > calling --help screen\n')
         parser.print_help()  # prints help message
         time.sleep(0.25)  # pause execution just long enough for help to display
-        parser.parse_args()  # prints error message and halts execution
+        parser.parse_args()  # prints error message and halts the execution
+
+    # converts the execution's arguments from a Namespace type => dictionary type
+    arg_dict = {
+        'interface': known_args.interface,
+        'symbol': known_args.symbol,
+        'market_price': known_args.market_price,
+    }
 
     return arg_dict
+
+
+def py_cmd(additional=''):
+    cmd = ('python3', 'python.exe')[platform.system() == 'Windows'] + ' run.py'
+    if additional:
+        additional.strip()
+        num_spaces = 0 if platform.system() == 'Windows' else 3
+        spaces = ' ' * num_spaces
+        cmd += ' ' + additional + spaces
+    return cmd
