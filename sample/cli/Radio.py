@@ -3,8 +3,9 @@ from .TextBaseClass import TextBaseClass
 
 
 class Radio(TextBaseClass):
-    def __init__(self, parent, valid_options):
+    def __init__(self, parent, key, valid_options):
         self.parent = parent
+        self.key = key
         self.valid_options = valid_options
         self.message = None
         self.create_message()
@@ -18,7 +19,7 @@ class Radio(TextBaseClass):
         self.user_input = input(f'{self.message}> ').strip()
 
     def create_message(self):
-        description = f'Is {self.parent.get_symbol()} a '
+        description = f'Is {self.parent.get("symbol")} a '
         for index in range(len(self.valid_options)):
             description += self.valid_options[index]
             if index is not len(self.valid_options) - 1:
@@ -40,7 +41,7 @@ class Radio(TextBaseClass):
         return True
 
     def assign_to_variable(self):
-        self.input = self.valid_options[int(self.user_input)]
+        self.parent.set(self.key, self.valid_options[int(self.user_input)])
 
     def __str__(self):
-        return f'{self.input}'
+        return str(self.parent.get(self.key))

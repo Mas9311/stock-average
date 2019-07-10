@@ -1,10 +1,15 @@
+from sample.format import Price
 from .TextBaseClass import TextBaseClass
 
 
 class Numeric(TextBaseClass):
-    def __init__(self, parent, message):
+    def __init__(self, parent, key, message):
         super().__init__(parent, message)
+        self.key = key
         self.valid_chars = [('0', '9'), '.']
+
+    def assign_to_variable(self):
+        self.parent.set(self.key, self.user_input)
 
     def input_in_valid_length(self):
         if self.user_input.count(','):
@@ -37,23 +42,17 @@ class Numeric(TextBaseClass):
             self.user_input = int(self.user_input)
 
     def __str__(self):
-        number = float(self.input)
-        if number == int(number):
-            number = int(number)
-        return f'{number}'
+        return f'{self.parent.get(self.key)}'
 
 
 class Currency(Numeric):
-    def __init__(self, parent, message):
-        super().__init__(parent, message)
+    def __init__(self, parent, key, message):
+        super().__init__(parent, key, message)
         self.intro_char = '$'
 
     def convert_to_number(self):
         """Modifies the user_input to """
-        self.user_input = str(float(self.user_input))
+        self.user_input = float(self.user_input)
 
     def __str__(self):
-        money = str(float(self.input))
-        for i in range(len(money) - 1 - money.find('.')):
-            money += '0'
-        return f'${money}'
+        return f'{Price(super().__str__())}'
