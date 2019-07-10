@@ -1,140 +1,120 @@
-from sample import format, menu
 import os
-# import sys
+import time
+from sample.format import Feedback, Price
+from sample.parameters import asset_type_choices
 
 
 def get_folder():
-    """Returns the symbols/ folder path."""
+    """Returns the /.../symbols/ folder path."""
     # return os.path.join('~/', 'Software', 'MyPrograms', 'stock-average', 'symbols')
     return os.path.join(os.getcwd(), 'symbols')
 
 
-def get_file(symbol):
+def get_file_path(symbol):
     """Returns the given symbol's file path."""
     return os.path.join(get_folder(), symbol.lower())
 
 
-def modify_file(cli):
-    """This function is called once the user has selected to modify a given value of the stock."""
-    print(cli.symbol, cli.get_symbol())
-    write_data_to_file(
-        cli.get_symbol(),
-        [
-            f'{cli.get_symbol()} is a {cli.asset_type}',
-            f'{cli.get_quantity()}',
-            f'{cli.get_current_average()}',
-            f'{cli.get_current_price()}'
-        ]
-    )
-    print(format.Feedback(False, f'{cli.get_symbol()} has been updated.'))
-
-
-def write_data_to_file(symbol, data):
-    with open(get_file(symbol), 'w') as symbol_file:
-        symbol_file.write(f'{data[0]}\n')
-        symbol_file.write(f'{data[1]}\n')
-        symbol_file.write(f'{data[2]}\n')
-        symbol_file.write(f'{data[3]}\n')
-        symbol_file.close()
+def dir_exists():
+    """Returns True if the configuration folder exists."""
+    return os.path.exists(get_folder())
 
 
 def make_sure_dir_exists():
     """Creates the symbols folder if it does not exist."""
-    symbols = get_folder()
-    if not os.path.exists(symbols):
-        os.mkdir(symbols)
-        print(format.Feedback(False, f'Created the symbols folder.'))
-
-
-def reread_quantity(my_stock):
-    """Called when a file is modified from 'is not a crypto' -> 'is a crypto'.
-    Retrieves the purchased_quantity from the file for decimal precision purposes."""
-    with open(get_file(my_stock.symbol), 'r') as f:
-        lines = f.read().splitlines()
-        f.close()
-        my_stock.purchased_quantity = format.best(float(lines[2]), my_stock.precision)
+    if not dir_exists():
+        os.mkdir(get_folder())
+        print(Feedback(False, 'Created the symbols folder.'))
 
 
 def file_exists(symbol):
-    """Returns true if the file is already made and has valid values."""
-    symbol = symbol.lower()
-    file_path = get_file(symbol)
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as f:
-            lines = f.read().splitlines()
-            if len(lines) >= 3:
-                try:
-                    p_price = float(lines[1])
-                    p_quantity = float(lines[2])
-                    if len(lines) is 3:
-                        return p_price >= 0 and p_quantity >= 0
-                    c_price = float(lines[3])
-                    return p_price >= 0 and p_quantity >= 0 and c_price >= 0
-                except ValueError:
-                    print(format.Feedback(True, [f'One lines in the {symbol} '
-                                                 f'file is not a number.',
-                                                 f'The file, {symbol} has been removed.',
-                                                 f'We will recreate the {symbol} file now.']))
-                    os.remove(file_path)
-    return False
+    """Returns true if the file exists."""
+    return os.path.exists(get_file_path(symbol))
 
 
-def assign_file_data_to_variables(cli):
-    (asset_type, quantity, current_average, current_price) = retrieve_file_data(cli.get_symbol())
-    if asset_type.lower().count('stock'):
-        cli.asset_type.input = cli.asset_type.valid_options[0]
-    else:
-        cli.asset_type.input = cli.asset_type.valid_options[1]
-    cli.quantity.input = quantity
-    cli.current_average.input = current_average
-    cli.current_price.input = current_price
+def file_keys():
+    return ['asset_type', 'quantity', 'current_average', 'market_price']
 
 
-def create_new_file(cli):
-    """The stock file does not currently exist in the folder.
-    We will now make one so you can use it again later."""
-    write_data_to_file(
-        cli.get_symbol(),
-        [
-            f'{cli.get_symbol()} is a {cli.get_asset_type()}',
-            cli.get_quantity(),
-            cli.get_current_average(),
-            cli.get_current_price()
-        ]
-    )
+def export_to_file(arg_dict):
+    with open(get_file_path(arg_dict['symbol']), 'w') as symbol_file:
+        for key in file_keys():
+            symbol_file.write(f'{key},{arg_dict[key]}\n')
+        symbol_file.close()
 
 
-# def get_symbol():
-#     if len(sys.argv) >= 2:
-#         symbol = sys.argv[1].strip().lower()
-#         try:
-#             float(symbol)  # This should fail, meaning correct arguments given
-#             print(format.Feedback(True, f'First arg should be the symbol, not the current price.'))
-#         except ValueError:
-#             return symbol
-#     else:
-#         return input(f'What is the symbol of the stock or cryptocurrency?\n').strip().lower()
-#
-#
-# def get_current_price(my_stock):
-#     if len(sys.argv) >= 3:
-#         value = sys.argv[2]  # current price
-#         modify_stock.validate_input(my_stock, f'current_price', value)
-#         my_stock.update_quantity_format()
-#         modify_file(my_stock, f'current price')
-
-
-def retrieve_file_data(symbol):
-    """Retrieves the stocks values from the input file.
-    If the stock file does not exist, this will create one."""
+def import_from_file(symbol, arg_dict={}):
+    """Read the configurations from the file given and place them into a dictionary format.
+    Values are turned from strings into their respective data types."""
     make_sure_dir_exists()
+
+    file_dict = {}
     symbol = symbol.lower()
 
-    with open(get_file(symbol), 'r') as stock_file:
-        lines = stock_file.read().splitlines()
-        stock_file.close()
+    if file_exists(symbol):
+        with open(get_file_path(symbol), 'r') as symbol_file:
+            file_data = symbol_file.read().splitlines()
+            for line in file_data:
+                try:
+                    key, value = line.split(',')
+                except ValueError:
+                    print('\nCannot read values from file, so it will be deleted.\nFile reads:')
+                    for x_file_line in file_data:
+                        print('', x_file_line)
+                    os.remove(get_file_path(symbol))
+                    print()
+                    time.sleep(0.25)
+                    return arg_dict, False
+                file_dict[key] = convert_value(key, value, symbol)
+            symbol_file.close()
+        print(symbol, 'file loaded successfully.')
 
-        return [lines[0].strip(),               # asset type: stock or cryptocurrency
-                abs(float(lines[1].strip())),   # quantity
-                abs(float(lines[2].strip())),   # current average
-                abs(float(lines[3].strip()))]   # current price
+    if not file_dict:
+        file_dict['symbol'] = symbol
+        for key in file_keys():
+            if key == 'asset_type':
+                file_dict[key] = asset_type_choices()[0]
+            else:
+                file_dict[key] = None
+    
+    if arg_dict:
+        file_dict = merge_arg_dict_with_file_dict(arg_dict, file_dict)
+    
+    return file_dict, True
+
+
+def merge_arg_dict_with_file_dict(arg_dict, file_dict):
+    for key in file_keys():
+        if key == 'market_price':
+            if arg_dict['market_price'] and file_dict[key] != arg_dict['market_price']:
+                print(
+                    f' updated {arg_dict["symbol"]}\'s current market Price:',
+                    Price(file_dict['market_price']), '=>', Price(arg_dict['market_price'])
+                )
+                continue
+        arg_dict[key] = file_dict[key]
+    
+    return arg_dict
+
+
+def convert_value(key, value, symbol):
+    if key == 'interface':
+        return value.lower() == 'True'.lower()
+    if key == 'symbol':
+        return symbol
+    elif key == 'asset_type':
+        choices = asset_type_choices()
+        return choices[value.lower() == choices[1]]
+    # while True:
+    try:
+        value = float(value)
+        return (float(value), int(value))[float(value) == int(value)]
+        # value = float(value)
+        # if value == int(value):
+        #     return int(value)
+        # return value
+    except ValueError:
+        # TODO: ask for new input of the key's value.
+        # response = input('Enter the', key)
+        #  user has manually modified the file, leading to this Error
+        return None
