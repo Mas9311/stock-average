@@ -1,12 +1,11 @@
 from tkinter import *
 from math import sqrt
-from sample import file_helper, menu
+from sample import file_helper, menu, parameters
 from sample.average import PotentialAverage
-
-from sample.cli.Alpha import Alpha as cli_Alpha
+from sample.format import Price
+from sample.cli.Alpha import CliAlpha
 from sample.cli.Radio import Radio as cli_Radio
 from sample.cli.Numeric import Numeric as cli_Numeric, Currency as cli_Currency
-
 from sample.gui.TitleBar import TitleBar
 from sample.gui.Alpha import Alpha as gui_Alpha
 from sample.gui.Radio import Radio as gui_Radio
@@ -14,60 +13,82 @@ from sample.gui.Numeric import Numeric as gui_Numeric, Currency as gui_Currency
 
 
 def run():
-#     if parameter['interface'] == 'gui':
-#         root = Tk()
-#         GUI(root)
-#         root.mainloop()
-#     else:
-        CLI()
+    arg_dict = parameters.retrieve_parameters()
+    if arg_dict['interface']:
+        GUI(Tk(), arg_dict)
+    else:
+        CLI(arg_dict)
 
 
 class CLI:
-    def __init__(self):
-        self.symbol = cli_Alpha(self, 'Enter the ticker symbol')
-        # if symbol was not passed in parameters
-        self.symbol.retrieve_input()
-        # else populate from parameters
-        self.asset_type = cli_Radio(self, ['stock', 'cryptocurrency'])
-        self.quantity = cli_Numeric(self, 'Enter the # of shares you own')
-        self.current_average = cli_Currency(self, 'Enter your current average')
-        self.current_price = cli_Currency(self, 'Enter the current market price')
-        self.allotted_money = cli_Currency(self, 'Enter the amount you willing to spend today')
-        self.potential_averages = []  # list of PotentialAverage instances
+    def __init__(self, arg_dict):
+        self.arg_dict = arg_dict
 
+        self.symbol = None
+        self.asset_type = None
+        self.quantity = None
+        self.current_average = None
+        self.market_price = None
+        self.allotted_money = None
+        self.potential_averages = None  # list of PotentialAverage instances
+
+        self.create_variables()
         self.run_cli()
 
+    def create_variables(self):
+        self.symbol = CliAlpha(self, 'symbol', 'Enter the ticker symbol')
+        if not self.get('symbol'):
+            self.symbol.retrieve_input()
+        self.asset_type = cli_Radio(self, 'asset_type', parameters.asset_type_choices())
+        self.quantity = cli_Numeric(self, 'quantity', 'Enter the # of shares you own')
+        self.current_average = cli_Currency(self, 'current_average', 'Enter your current average')
+        self.market_price = cli_Currency(self, 'market_price', 'Enter the current market price')
+        self.allotted_money = cli_Currency(self, 'allotted_money', 'Enter the amount you willing to spend today')
+
     def run_cli(self):
-        if not file_helper.file_exists(self.get_symbol()):
-            print(f'The {self.get_symbol()} file is not in the symbols folder.\n')
-            self.asset_type.retrieve_input()
-            self.quantity.retrieve_input()
-            self.current_average.retrieve_input()
-            # if current_price was not passed in parameters
-            self.current_price.retrieve_input()
-            # else assign to variable
-            file_helper.create_new_file(self)
+        if not file_helper.file_exists(self.get('symbol')):
+            self.ask_for_variable_input()
         else:
-            file_helper.assign_file_data_to_variables(self)
-            # if current_price was passed in parameters: assign to variable
+            self.arg_dict, success = file_helper.import_from_file(self.get('symbol'), self.arg_dict)
+            if not success:
+                self.ask_for_variable_input()
+        print()
+
+        # save data to the file (overwrites any existing data)
+        file_helper.export_to_file(self.arg_dict)
+
+        # ask user if they wish to update an values
         menu.update(self)
+
+        # ask user for how much they are willing to spend today
         self.retrieve_allotted_money()
         self.potential_averages = []
         self.calculate_potentials()
+
+        # prints potential averages incrementally based on the allotted_money given
         for potential_average in self.potential_averages:
             print(potential_average)
+
+    def ask_for_variable_input(self):
+        print(f'The {self.symbol} file is not in the symbols folder.\n')
+        self.asset_type.retrieve_input()
+        self.quantity.retrieve_input()
+        self.current_average.retrieve_input()
+        if not self.get('market_price'):
+            # if user did not pass market price in execution arguments
+            self.market_price.retrieve_input()
 
     def calculate_potentials(self):
         """The user may not want to spend all of the money they designated,
         so this will calculate the potential averages incrementally"""
-        if self.get_asset_type() == 'stock':
+        if self.get('asset_type') == 'stock':
             # set number of iteration using integer division: "How many shares you can buy"
-            iterations = self.get_allotted_money() // self.get_current_price()
-            cost_per = self.get_current_price() / iterations
-            print('You can buy', iterations, 'shares of', self.get_symbol())
+            iterations = int(self.get('allotted_money') // self.get('market_price'))
+            cost_per = self.get('market_price')
+            print('You can buy', iterations, 'shares of', self.symbol, 'at', Price(cost_per))
         else:
-            iterations = int(sqrt(self.get_allotted_money()))
-            cost_per = self.get_allotted_money() / iterations
+            iterations = int(sqrt(self.get('allotted_money')))
+            cost_per = self.get('allotted_money') / iterations
 
         for curr_iter in range(iterations):
             self.potential_averages.append(PotentialAverage(self, curr_iter + 1, cost_per))
@@ -75,56 +96,47 @@ class CLI:
     def retrieve_allotted_money(self):
         while True:
             self.allotted_money.reset_and_ask_question()
-            if self.get_allotted_money() >= 1.00:
+            if self.get('allotted_money') >= 1.00:
                 # user has designated more than a dollar
-                if self.get_asset_type() == 'stock':
+                if self.get('asset_type') == 'stock':
                     # this symbol is a stock
-                    if self.get_allotted_money() > self.get_current_price():
+                    if self.get('allotted_money') > self.get('market_price'):
                         # user can buy one or more shares (in multiples of integers)
                         return
                     else:
                         # cannot buy a single share with the allotted money
-                        print(f'Invalid: Allotted money must be greater than {self.current_price}.\n')
+                        print(f'Invalid: Allotted money must be greater than {self.market_price}.\n')
                 else:
                     # this symbol is a crypto: user can buy a fraction of a crypto coin.
                     return
             else:
                 print('Invalid: Allotted money must be greater than $0.99.\n')
 
-    def get_symbol(self):
-        return self.symbol.input.upper()
+    def set(self, key, value):
+        self.arg_dict[key] = value
 
-    def get_asset_type(self):
-        return self.asset_type.input
+    def get(self, key):
+        return self.arg_dict[key] if key in self.arg_dict else ''
 
     def get_type(self):
         s = ''
-        if float(self.get_quantity()) != 1:
-            s = 's'
-        return f'share{s}' if self.get_asset_type() == 'stock' else f'coin{s}'
-
-    def get_quantity(self):
-        return self.quantity.input
-
-    def get_current_average(self):
-        return self.current_average.input
-
-    def get_current_price(self):
-        return self.current_price.input
-
-    def get_allotted_money(self):
-        return float(self.allotted_money.input)
+        try:
+            if float(self.get('quantity')) != 1:
+                s = 's'
+        except TypeError:
+            pass
+        return f'share{s}' if self.get('asset_type') == 'stock' else f'coin{s}'
 
     def __str__(self):
         """Returns the stock in string format."""
         return (f'{self.symbol}, the {self.asset_type}:\n'
-                f'\tYou previously purchased {self.quantity} {self.get_type()} of {self.symbol}.\n'
-                f'\tYour current average of {self.symbol} is {self.current_average}.\n'
-                f'\t{self.symbol}\'s current market price is {self.current_price}.\n')
+                f'  You previously purchased {self.quantity} {self.get_type()} of {self.symbol}.\n'
+                f'  Your current average of {self.symbol} is {self.current_average}.\n'
+                f'  {self.symbol}\'s current market price is {self.market_price}.\n')
 
 
 class GUI(Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, arg_dict):
         Frame.__init__(self, parent)
         self.master.title("Compute New Average")
         self.pack(fill=X)
@@ -150,6 +162,7 @@ class GUI(Frame):
         self.focused_frame = 0  # location of the cursor (once user clicks/tabs to an Entry's textbox)
 
         self._create_gui_widgets()
+        self.root.mainloop()
 
     def _create_frames(self):
         return [
