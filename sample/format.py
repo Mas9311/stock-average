@@ -95,11 +95,11 @@ class Price:
         else:
             # truncate the least-significant decimal digits if money trails farther than precision
             self.money = str(round(float(self.money), self.precision))
-            if self.money.find('e-'):
+            if self.money.find('e-') is not -1:
                 # if the money is in scientific notation:
                 # convert back to decimal (max of 14 '0's after '.')
                 self.money = ("%0.15f" % float(self.money)).rstrip('0')
-            
+
             # create the leading zeros if precision is longer than 
             # the location of the least-significant decimal digit
             zeros = '0' * (self.precision - (len(self.money) - 1 - self.money.find('.')))
