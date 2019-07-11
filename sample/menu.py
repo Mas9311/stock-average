@@ -1,7 +1,10 @@
+import sys
+
 from sample import file_helper, format
 
 
 def create_menu_output(description, options):
+    """The generic formula for creating the header message + [Enter] to x + [1] to y + ... """
     menu_output = f'{description}\n [Enter] {options[0]}.\n'
     for index in range(1, len(options)):
         menu_output += f' [{index}] {options[index]}.\n'
@@ -108,11 +111,26 @@ def update_selected_option(selection, cli):
 
 def ending_menu(symbol):
     """Prints the final menu to determine what the user wants to do now."""
-    if ask_options(f'Do you wish to continue or exit?',
-                   ['to exit the program', 'to continue finding averages']) is None:
-        return f'quit'
-    if not ask_options(f'Do you want to choose another symbol or continue with {symbol}?',
-                       [f'continue with {symbol}', 'choose a different symbol']):
-        return f'same'
-    print(f'\n\n\n\n\n\n\n\n\n\n\n\n')
-    return f'different'
+    if ask_options(
+            'Do you wish to quit or continue?',
+            [
+
+                'to continue finding averages',
+                'to quit the program'
+            ]
+    ):
+        # user selected to quit the program
+        sys.exit()
+    if ask_options(
+            f'Do you wish to continue with {symbol} or choose another symbol?',
+            [
+                f'continue with {symbol}',
+                'choose a different symbol'
+            ]
+    ):
+        # user selected to choose a different symbol
+        print('\n' * 20)  # print 21 newlines for visual detachment
+        return 'different'
+
+    # else: continue finding averages for the same symbol
+    return 'same'

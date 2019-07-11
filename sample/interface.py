@@ -46,28 +46,48 @@ class CLI:
         self.allotted_money = cli_Currency(self, 'allotted_money', 'Enter the amount you willing to spend today')
 
     def run_cli(self):
+        self.define_variables()
+        while True:
+            # ask user if they wish to update an values
+            menu.update(self)
+
+            # ask user for how much they are willing to spend today
+            self.retrieve_allotted_money()
+            self.potential_averages = []
+            self.calculate_potentials()
+
+            # prints potential averages incrementally based on the allotted_money given
+            for potential_average in self.potential_averages:
+                print(potential_average)
+            print()
+
+            if menu.ending_menu(self.get('symbol')) == 'different':
+                # user selects to continue the program and choose a different symbol
+                self.reset_variables()
+
+    def define_variables(self):
         if not file_helper.file_exists(self.get('symbol')):
+            # file does not exist: ask for input one variable at a time
             self.ask_for_variable_input()
         else:
+            # file exists, so import the variables and assign them to arg_dict
             self.arg_dict, success = file_helper.import_from_file(self.get('symbol'), self.arg_dict)
             if not success:
+                # if the file was invalid format: ask for input one variable at a time
                 self.ask_for_variable_input()
         print()
 
         # save data to the file (overwrites any existing data)
         file_helper.export_to_file(self.arg_dict)
 
-        # ask user if they wish to update an values
-        menu.update(self)
-
-        # ask user for how much they are willing to spend today
-        self.retrieve_allotted_money()
-        self.potential_averages = []
-        self.calculate_potentials()
-
-        # prints potential averages incrementally based on the allotted_money given
-        for potential_average in self.potential_averages:
-            print(potential_average)
+    def reset_variables(self):
+        """Erases all relevant variables in the arg_dict dictionary:
+        symbol, asset_type, quantity, current_average, market_price"""
+        for key in file_helper.file_keys() + ['symbol']:
+            # resets the arg_dict values to None
+            self.set(key, None)
+        self.symbol.retrieve_input()
+        self.define_variables()
 
     def ask_for_variable_input(self):
         print(f'The {self.symbol} file is not in the symbols folder.\n')
@@ -89,6 +109,18 @@ class CLI:
         else:
             iterations = int(sqrt(self.get('allotted_money')))
             cost_per = self.get('allotted_money') / iterations
+
+        if iterations > 10:
+            # if the potential averages would be a wall of text: scale it down to ~10 potential averages
+            scale = int(iterations // 10)
+            if 14 < iterations < 20:
+                # iterations is between [15, 19] => [7, 9]
+                scale = 2
+
+            if scale > 1:
+                # if scale is worth calculating (and prevents ZeroDivisionError)
+                iterations //= scale
+                cost_per *= scale
 
         for curr_iter in range(iterations):
             self.potential_averages.append(PotentialAverage(self, curr_iter + 1, cost_per))
