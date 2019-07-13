@@ -8,7 +8,7 @@ class Transform(GuiRadio):
     If 'Graph' is selected, display a graph of the (x, y) coordinates."""
     def __init__(self, parent, index):
         super().__init__(parent, index)
-        self.display = StringVar()
+        self.verbose = False
 
         self.create_widgets()
 

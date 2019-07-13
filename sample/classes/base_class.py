@@ -102,6 +102,9 @@ class FrameBaseClass(Frame):
         Resets all GUI._frames values associated to self.index completely."""
         self.parent.destroy_frame(self.index)
 
+    def set_string(self, value):
+        self.string_var.set(str(value))
+
 
 class EntryBaseClass(FrameBaseClass):
     def __init__(self, parent, index):

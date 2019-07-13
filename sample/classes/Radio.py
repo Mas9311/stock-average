@@ -56,6 +56,7 @@ class GuiRadio(FrameBaseClass):
 
         self.buttons = []
         self.current_button_selected = None
+        self.verbose = True
 
         self.create_radio_widgets()
 
@@ -78,8 +79,6 @@ class GuiRadio(FrameBaseClass):
                                  val=option_text, command=lambda option=option_text: self.select(option))
             button.pack(side=LEFT, anchor=W)
             self.buttons.append(button)
-            # button.select()
-            # button.deselect()
 
     def deselect_buttons(self):
         """Deselects all Radiobuttons currently within this Frame."""
@@ -103,21 +102,23 @@ class GuiRadio(FrameBaseClass):
         self.parent.focused_frame = self.index
 
     def select(self, option_text):
-        if self.current_button_selected is None:
-            self.parent.focused_frame = self.index
+        if self.current_button_selected is None or self.current_button_selected != option_text:
             # Case 1: no Buttons selected => a Button selected
-            print(self.parent.arg_dict['symbol'].upper(), 'is a', option_text)
+            # Case 2: a Button selected => a different Button selected
+            self.parent.focused_frame = self.index
+            if self.verbose:
+                print(self.parent.arg_dict['symbol'].upper(), 'is a', option_text)
             self.current_button_selected = option_text
             self.parent.create_next_frame(self.index + 1)
-            self.buttons[self.parent.get(self.index, 'options').index(option_text)].select()
-        elif self.current_button_selected != option_text:
-            self.parent.focused_frame = self.index
-            # Case 2: a Button selected => a different Button selected
-            print(self.parent.arg_dict['symbol'].upper(), 'is a', option_text)
-            self.current_button_selected = option_text
         else:
             # Case 3: a Button selected => no Buttons selected
             self.deselect_buttons()
             self.current_button_selected = None
             self.parent.destroy_all_frames_after(self.index)
         self.arg_set(option_text)
+
+    def set_string(self, value):
+        value = value.lower()
+        super().set_string(value)
+        self.select(value)
+
