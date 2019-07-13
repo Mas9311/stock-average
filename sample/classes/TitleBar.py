@@ -22,7 +22,7 @@ class TitleBar(Frame):
         """Only called when creating a new TitleBar instance, in the _init_ method above."""
         self.bind('<FocusIn>', self.title_bar_focus_in)  # cursor lies within this Frame
 
-        for button_type, anchor_location in self.parent.get_val(self.index, 'options'):
+        for button_type, anchor_location in self.parent.get(self.index, 'options'):
             button = Button(self, highlightthickness=0, text=button_type, command=self._close,
                             activebackground='#444444', activeforeground='#cccccc')
             button.pack(side=TOP, anchor=anchor_location)
@@ -36,4 +36,3 @@ class TitleBar(Frame):
     def title_bar_focus_in(self, _):
         """This Frame currently contains the cursor."""
         self.parent.focused_frame = self.index
-
