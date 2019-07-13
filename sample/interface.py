@@ -3,13 +3,10 @@ from math import sqrt
 from sample import file_helper, menu, parameters
 from sample.average import PotentialAverage
 from sample.format import Price
-from sample.cli.Alpha import CliAlpha
-from sample.cli.Radio import Radio as cli_Radio
-from sample.cli.Numeric import Numeric as cli_Numeric, Currency as cli_Currency
-from sample.gui.TitleBar import TitleBar
-from sample.gui.Alpha import Alpha as gui_Alpha
-from sample.gui.Radio import Radio as gui_Radio
-from sample.gui.Numeric import Numeric as gui_Numeric, Currency as gui_Currency
+from sample.classes.Alpha import CliAlpha, GuiAlpha
+from sample.classes.Radio import CliRadio, GuiRadio
+from sample.classes.Numeric import CliCurrency, CliNumeric, GuiCurrency, GuiNumeric
+from sample.classes.TitleBar import TitleBar
 
 
 def run():
@@ -33,20 +30,20 @@ class CLI:
         self.potential_averages = None  # list of PotentialAverage instances
 
         self.create_variables()
+        self.define_variables()
         self.run_cli()
 
     def create_variables(self):
         self.symbol = CliAlpha(self, 'symbol', 'Enter the ticker symbol')
         if not self.get('symbol'):
             self.symbol.retrieve_input()
-        self.asset_type = cli_Radio(self, 'asset_type', parameters.asset_type_choices())
-        self.quantity = cli_Numeric(self, 'quantity', 'Enter the # of shares you own')
-        self.current_average = cli_Currency(self, 'current_average', 'Enter your current average')
-        self.market_price = cli_Currency(self, 'market_price', 'Enter the current market price')
-        self.allotted_money = cli_Currency(self, 'allotted_money', 'Enter the amount you willing to spend today')
+        self.asset_type = CliRadio(self, 'asset_type', parameters.asset_type_choices())
+        self.quantity = CliNumeric(self, 'quantity', 'Enter the # of shares you own')
+        self.current_average = CliCurrency(self, 'current_average', 'Enter your current average')
+        self.market_price = CliCurrency(self, 'market_price', 'Enter the current market price')
+        self.allotted_money = CliCurrency(self, 'allotted_money', 'Enter the amount you willing to spend today')
 
     def run_cli(self):
-        self.define_variables()
         while True:
             # ask user if they wish to update an values
             menu.update(self)
@@ -175,11 +172,14 @@ class GUI(Frame):
         self.root = parent
         self.root.resizable(True, False)
 
+        self.arg_dict = arg_dict
+
         self.symbol_string = StringVar()
         self.asset_type_string = StringVar()
         self.quantity_string = StringVar()
         self.current_average_string = StringVar()
-        self.current_price_string = StringVar()
+        self.market_price_string = StringVar()
+        self.allotted_money_string = StringVar()
         self.potential_average_string = StringVar()
 
         self.title_bar_frame = None
@@ -187,7 +187,8 @@ class GUI(Frame):
         self.asset_type_frame = None
         self.quantity_frame = None
         self.current_average_frame = None
-        self.current_price_frame = None
+        self.market_price_frame = None
+        self.allotted_money_frame = None
         self.potential_average_frame = None
 
         self._frames = self._create_frames()
@@ -209,6 +210,7 @@ class GUI(Frame):
                 'description': 'Enter the ticker symbol.',
                 'frame_var': self.symbol_frame,
                 'index': 1,
+                'key': 'symbol',
                 'label': 'Symbol',
                 'StringVar': self.symbol_string,
             },
@@ -216,15 +218,17 @@ class GUI(Frame):
                 'create': self._create_radio_frame,
                 'frame_var': self.asset_type_frame,
                 'index': 2,
+                'key': 'asset_type',
                 'label': 'Asset Type',
-                'options': ['stock', 'cryptocurrency'],
-                'StringVar': self.asset_type_string,
+                'options': parameters.asset_type_choices(),
+                # 'StringVar': self.asset_type_string,
             },
             {  # Quantity Frame
                 'create': self._create_numeric_frame,
                 'description': 'Enter the # of shares you own.',
                 'frame_var': self.quantity_frame,
                 'index': 3,
+                'key': 'quantity',
                 'label': 'Quantity',
                 'StringVar': self.quantity_string,
             },
@@ -233,21 +237,32 @@ class GUI(Frame):
                 'description': 'Enter your current average.',
                 'frame_var': self.current_average_frame,
                 'index': 4,
+                'key': 'current_average',
                 'label': 'Current Average',
                 'StringVar': self.current_average_string,
             },
-            {  # Current Price Frame
+            {  # Market Price Frame
                 'create': self._create_currency_frame,
                 'description': 'Enter the current market price.',
-                'frame_var': self.current_price_frame,
+                'frame_var': self.market_price_frame,
                 'index': 5,
-                'label': 'Current Price',
-                'StringVar': self.current_price_string,
+                'key': 'market_price',
+                'label': 'Market Price',
+                'StringVar': self.market_price_string,
+            },
+            {  # Allotted Money Frame
+                'create': self._create_currency_frame,
+                'description': 'Enter the amount you willing to spend today.',
+                'frame_var': self.allotted_money_frame,
+                'index': 6,
+                'key': 'allotted_money',
+                'label': 'Allotted Money',
+                'StringVar': self.allotted_money_string,
             },
             {  # Potential Average Frame
-                'create': self._create_currency_frame,
+                'create': self._create_potential_frame,
                 'frame_var': self.potential_average_frame,
-                'index': 6,
+                'index': 7,
                 'label': 'Potential Average',
                 'StringVar': self.potential_average_string,
             }
@@ -257,56 +272,82 @@ class GUI(Frame):
         for i in range(len(self._frames)):
             self._frames[i]['created'] = False
         self.create_next_frame(0)  # create TitleBar Frame
-        self.create_next_frame(1)  # create Alpha "Symbol" Frame
+        self.create_next_frame(1)  # create Alpha 'Symbol' Frame
+        if self.arg_dict['symbol']:
+            value = self.arg_dict['symbol'].upper()
+            if len(value) > 4:
+                value = value[:4]
+                self.arg_dict['symbol'] = value.lower()
+            self.symbol_string.set(value)
+            self.create_next_frame(2)  # Create Radio 'Asset Type' Frame
+            self.populate_from_file()
 
-    def _create_title_bar_frame(self, index):
+    def _create_title_bar_frame(self, index, _):
         return TitleBar(self, index)
 
-    def _create_alpha_frame(self, index):
-        return gui_Alpha(self, index)
+    def _create_alpha_frame(self, index, key):
+        return GuiAlpha(self, index, key)
 
-    def _create_radio_frame(self, index):
-        return gui_Radio(self, index)
+    def _create_radio_frame(self, index, key):
+        return GuiRadio(self, index, key)
 
-    def _create_numeric_frame(self, index):
-        return gui_Numeric(self, index)
+    def _create_numeric_frame(self, index, key):
+        return GuiNumeric(self, index, key)
 
-    def _create_currency_frame(self, index):
-        return gui_Currency(self, index)
+    def _create_currency_frame(self, index, key):
+        return GuiCurrency(self, index, key)
+
+    def _create_potential_frame(self, index, key):
+        return GuiCurrency(self, index, key)
 
     def _resize_frame(self):
         self.root.update_idletasks()
-        w = 400 if self.root.winfo_reqwidth() < 400 else self.root.winfo_reqwidth()
+        w = 450 if self.root.winfo_reqwidth() < 400 else self.root.winfo_reqwidth()
         h = self.root.winfo_reqheight()
-        # _, _, x, y = self.root.winfo_geometry().replace('x', '.').replace('+', '.').split('.')
-        geo = f'{w}x{h}'
-        self.root.geometry(geo)
-        # print(geo)
+        self.root.geometry(f'{w}x{h}')
 
     def create_next_frame(self, next_index):
         """Will create the frame if:
         1. The next_index has a value (it exists) in the GUI._frames dict
           and
         2. The next_index's Frame has not been already created"""
-        if next_index < self.len_frames() and not self.get_val(next_index, 'created'):
-            self._frames[next_index]['frame_var'] = self.get_val(next_index, 'create')(next_index)
+        if next_index < self.len_frames() and not self.get(next_index, 'created'):
+            key = self.get(next_index, 'key') if 'key' in self.get_keys(next_index) else None
+            self._frames[next_index]['frame_var'] = self.get(next_index, 'create')(next_index, key)
             self._frames[next_index]['created'] = True
             self._resize_frame()
 
     def destroy_all_frames_after(self, keep_index):
         for curr_index in range(self.len_frames()):
-            if curr_index > keep_index and self.get_val(curr_index, 'created'):
-                self.get_val(curr_index, 'frame_var').destroy_frame()
+            if curr_index > keep_index and self.get(curr_index, 'created'):
+                self.get(curr_index, 'frame_var').destroy_frame()
+        temp_dict = {
+            'interface': self.arg_dict['interface'],
+            'symbol': self.arg_dict['symbol'],
+        }
+        for index, key in zip(range(2, keep_index), file_helper.file_keys()):
+            if key in self.arg_dict.keys():
+                temp_dict[key] = self.arg_dict[key]
+        self.arg_dict = temp_dict
 
     def destroy_frame(self, index):
         """Destroys the Frame (and all nested widgets recursively) at a given index of GUI._frames
         Sets all modified attributes to their original values. See GUI._create_frames()"""
-        if self.get_val(index, 'created'):
-            self.get_val(index, 'frame_var').destroy()  # recursively destroys the Frame and all widgets inside it
-            self.set_val(index, 'frame_var', None)  # forget the reference, ∴ send to GC
-            self.set_val(index, 'created', False)  # reset the 'created' attribute to False (DNE)
-            self.set_val(index, 'StringVar', StringVar())  # reset the String variable the Entry text is stored in
+        if self.get(index, 'created'):
+            self.get(index, 'frame_var').destroy()  # recursively destroys the Frame and all widgets inside it
+            self.set(index, 'frame_var', None)  # forget the reference, ∴ send to GC
+            self.set(index, 'created', False)  # reset the 'created' attribute to False (DNE)
+            self.set(index, 'StringVar', StringVar())  # reset the String variable the Entry text is stored in
             self._resize_frame()  # resize the frame since this Frame was destroyed
+        else:
+            print(index, 'has not been created')
+
+    def get(self, index, key):
+        """Accessor of the GUI._frames variable"""
+        return self._frames[index][key]
+
+    def get_keys(self, index):
+        return self._frames[index].keys()
 
     @staticmethod
     def is_char_printable(char):
@@ -328,25 +369,64 @@ class GUI(Frame):
         # char did not pass any validity checks || is a meta key, ∴ char is invalid
         return False
 
-    def get_keys(self, index):
-        return self._frames[index].keys()
-
-    def get_val(self, index, key):
-        """Accessor of the GUI._frames variable"""
-        return self._frames[index][key]
-
-    def set_val(self, index, key, value):
-        """Modifier of the GUI._frames variable"""
-        self._frames[index][key] = value
-
     def len_frames(self):
         return len(self._frames)
 
     def populate_from_file(self):
         """Read data from file, create the Frame, then populate with data"""
-        # Read data from file
-        for index in range(self.len_frames()):
-            # Create the Frame
-            self.create_next_frame(index)
-            # Populate the Frame's StringVar with data
-        self._resize_frame()
+        if file_helper.file_exists(self.arg_dict['symbol']):
+            self.arg_dict, success = file_helper.import_from_file(self.arg_dict['symbol'], self.arg_dict)
+            if success:
+                for index in range(1, 7):
+                    # Create the Frame
+                    self.create_next_frame(index)
+                    if index is not 6:
+                        self.focused_frame = index
+
+                    if index in [1, 3, 4, 5]:
+                        # arg_dict has an entry for this Frame
+                        key = self.get(index, 'key')
+
+                        if key not in self.arg_dict.keys():
+                            break
+                        if self.arg_dict[key] is None:
+                            print('The file\'s', key, 'value is invalid.')
+                            break
+                        value = self.arg_dict[self.get(index, 'key')]
+                        if isinstance(value, str):
+                            value = value.upper()
+                        intro_char = ''
+                        if self.get(index, 'frame_var').intro_char:
+                            intro_char = self.get(index, 'frame_var').intro_char
+                        self.get(index, 'StringVar').set(f'{intro_char}{value}')
+                    elif index is 2:
+                        # asset_type Radio Frame
+                        options = parameters.asset_type_choices()
+                        option_text = options[self.arg_dict['asset_type'] != options[0]]
+                        # self.get(index, 'frame_var').last_button_selected = option_text
+                        self.get(index, 'frame_var').select(option_text)
+                # resize the gui root once all the Frames have been created
+                self._resize_frame()
+
+    def save_to_file(self):
+        if self.focused_frame is not 6:
+            valid_entries = True
+            for index in [1, 2, 3, 4, 5]:
+                if self.get(index, 'created'):
+                    if self.get(index, 'frame_var').is_empty():
+                        # the Frame is empty: do not save to file
+                        valid_entries = False
+                        break
+                    # else: the Frame is not empty
+                else:
+                    # The Frame has not been created yet: do not save to file
+                    valid_entries = False
+                    break
+
+            if valid_entries:
+                file_helper.export_to_file(self.arg_dict)
+                print(' ', self.arg_dict['symbol'].lower(), 'was written to file.')
+
+    def set(self, index, key, value):
+        """Modifier of the GUI._frames variable"""
+        self._frames[index][key] = value
