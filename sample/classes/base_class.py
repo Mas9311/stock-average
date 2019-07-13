@@ -71,23 +71,48 @@ class TextBaseClass:
         return True
 
 
-class EntryBaseClass(Frame):
-    def __init__(self, parent, index, key=None):
-        Frame.__init__(self, parent)
+class FrameBaseClass(Frame):
+    def __init__(self, parent, index):
+        Frame.__init__(self, master=parent)
         self.pack(expand=True, fill=BOTH)
         self.parent = parent
         self.root = self.parent.root
 
         self.index = index
-        self.key = key
+        self.key = self.parent.get(index, 'key')
+        self.label = None
+        self.string_var = StringVar()
+
+    def arg_get(self):
+        return self.parent.arg_dict[self.key]
+
+    def arg_set(self, value):
+        self.parent.arg_dict[self.key] = value
+        self.parent.save_to_file()
+
+    def create_label_widget(self):
+        self.label = Label(self, text=self.parent.get(self.index, 'label'), width=15)
+        self.label.pack(side=LEFT, anchor=W)
+
+    def create_widgets(self):
+        self.create_label_widget()
+
+    def destroy_frame(self):
+        """Calling this will delete this Alpha Frame instance.
+        Resets all GUI._frames values associated to self.index completely."""
+        self.parent.destroy_frame(self.index)
+
+
+class EntryBaseClass(FrameBaseClass):
+    def __init__(self, parent, index):
+        super().__init__(parent, index)
         if 'description' in self.parent.get_keys(self.index):
             self.description = self.parent.get(self.index, 'description')
             self.disabled = False
         else:
             self.disabled = True
         self.entry = None
-        self.label = None
-        self.intro_char = None  # placed at the beginning of the Entry's textbox when cursor is within
+        self.intro_char = ''  # placed at the beginning of the Entry's textbox when cursor is within
         self.valid_chars = None
 
         self.create_widgets()
@@ -145,16 +170,10 @@ class EntryBaseClass(Frame):
             self.entry.delete(0, END)
             self.entry.insert(0, self.description)
 
-    def arg_get(self):
-        return self.parent.arg_dict[self.key]
-
-    def arg_set(self, value):
-        self.parent.arg_dict[self.key] = value
-        self.parent.save_to_file()
-
     def bind_frame(self):
         self.bind('<FocusIn>', self.focus_in)  # cursor lies within this Frame
         self.bind('<FocusOut>', self.focus_out)  # cursor has left this Frame
+
         if not self.disabled:
             self.entry.bind('<Enter>', self.mouse_enters_entry)
             self.entry.bind('<Leave>', self.mouse_leaves_entry)
@@ -165,24 +184,15 @@ class EntryBaseClass(Frame):
         else:
             self.entry.configure(state='readonly')
 
-    def create_widgets(self):
-        self.create_label_widget()
-        self.create_entry_widget()
-        self.bind_frame()
-
-    def create_label_widget(self):
-        self.label = Label(self, text=self.parent.get(self.index, 'label'), width=15)
-        self.label.pack(side=LEFT, anchor=W)
-
     def create_entry_widget(self):
-        self.entry = Entry(self, textvariable=self.parent.get(self.index, 'StringVar'))
+        self.entry = Entry(self, textvariable=self.string_var)
         self.entry.pack(side=LEFT, expand=True, fill=X)
         self._insert_description()
 
-    def destroy_frame(self):
-        """Calling this will delete this Alpha Frame instance.
-        Resets all GUI._frames values associated to self.index completely."""
-        self.parent.destroy_frame(self.index)
+    def create_widgets(self):
+        super().create_widgets()
+        self.create_entry_widget()
+        self.bind_frame()
 
     def focus_in(self, _):
         """This Frame currently contains the cursor.
@@ -218,3 +228,6 @@ class EntryBaseClass(Frame):
         if self.intro_char is not None:
             if not self.entry.get().count(self.intro_char):
                 self.entry.insert(0, self.intro_char)
+
+    def set_string(self, value):
+        self.string_var.set(f'{self.intro_char}{value}')

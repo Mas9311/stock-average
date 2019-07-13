@@ -66,8 +66,8 @@ class CliCurrency(CliNumeric):
 
 
 class GuiNumeric(EntryBaseClass):
-    def __init__(self, parent, index, key):
-        super().__init__(parent, index, key)
+    def __init__(self, parent, index):
+        super().__init__(parent, index)
         self.valid_chars = [('0', '9'), '.']
 
         self.entry.bind('<KeyRelease>', self.numeric_entry_key_released)  # key pressed => key released
@@ -134,8 +134,8 @@ class GuiNumeric(EntryBaseClass):
 
 
 class GuiCurrency(GuiNumeric):
-    def __init__(self, parent, index, key):
-        super().__init__(parent, index, key)
+    def __init__(self, parent, index):
+        super().__init__(parent, index)
         self.intro_char = '$'
 
     def arg_set(self, value):

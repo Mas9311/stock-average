@@ -21,8 +21,8 @@ class GuiAlpha(EntryBaseClass):
     Feel free to type a lowercase letter, because the text is replaced with CAPITAL letters.
     All other printable characters {'c', '1', '~', ' ', ...} will be deleted in-place.
     Meta keys {Shift, Tab, Left, Control, Escape, ...} will not alter the Entry's textbox."""
-    def __init__(self, parent, index, key):
-        super().__init__(parent, index, key)
+    def __init__(self, parent, index):
+        super().__init__(parent, index)
         self.last_text_entered = None
         self.valid_chars = [('a', 'z'), ('A', 'Z')]
 

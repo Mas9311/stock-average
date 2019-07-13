@@ -1,6 +1,6 @@
 from tkinter import *
 from sample import menu
-from .base_class import TextBaseClass
+from .base_class import TextBaseClass, FrameBaseClass
 
 
 class CliRadio(TextBaseClass):
@@ -48,19 +48,13 @@ class CliRadio(TextBaseClass):
         return str(self.parent.get(self.key))
 
 
-class GuiRadio(Frame):
+class GuiRadio(FrameBaseClass):
     """A Frame that contains a label and options for the user to select.
     A maximum of one and only one option (button) can be selected at any given time."""
-    def __init__(self, parent, index, key):
-        Frame.__init__(self, parent)
-        self.pack(expand=True, fill=BOTH)
-        self.parent = parent
-        self.root = self.parent.root
+    def __init__(self, parent, index):
+        super().__init__(parent, index)
 
         self.buttons = []
-        self.index = index
-        self.key = key
-        self.label = None
         self.current_button_selected = None
 
         self.create_radio_widgets()
@@ -80,18 +74,18 @@ class GuiRadio(Frame):
         self.label.pack(side=LEFT, anchor=W)
 
         for option_text in self.parent.get(self.index, 'options'):
-            button = Radiobutton(self, text=option_text, variable=self.current_button_selected,
+            button = Radiobutton(self, text=option_text, variable=self.string_var,
                                  val=option_text, command=lambda option=option_text: self.select(option))
             button.pack(side=LEFT, anchor=W)
             self.buttons.append(button)
-            button.select()
-            button.deselect()
+            # button.select()
+            # button.deselect()
 
     def deselect_buttons(self):
         """Deselects all Radiobuttons currently within this Frame."""
         for button in self.buttons:
             button.deselect()
-        self.parent.set(self.index, 'StringVar', StringVar())
+        self.string_var = StringVar()
 
     def destroy_frame(self):
         """Calling this will delete this Radio Frame instance and deselects all Radio Buttons.
@@ -112,14 +106,14 @@ class GuiRadio(Frame):
         if self.current_button_selected is None:
             self.parent.focused_frame = self.index
             # Case 1: no Buttons selected => a Button selected
-            print(self.parent.symbol_string.get(), 'is a', option_text)
+            print(self.parent.arg_dict['symbol'].upper(), 'is a', option_text)
             self.current_button_selected = option_text
             self.parent.create_next_frame(self.index + 1)
             self.buttons[self.parent.get(self.index, 'options').index(option_text)].select()
         elif self.current_button_selected != option_text:
             self.parent.focused_frame = self.index
             # Case 2: a Button selected => a different Button selected
-            print(self.parent.symbol_string.get(), 'is a', option_text)
+            print(self.parent.arg_dict['symbol'].upper(), 'is a', option_text)
             self.current_button_selected = option_text
         else:
             # Case 3: a Button selected => no Buttons selected
