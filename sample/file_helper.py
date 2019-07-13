@@ -78,7 +78,11 @@ def import_from_file(symbol, arg_dict):
 def merge_dictionaries(arg_dict, file_dict):
     for key in file_keys():
         if key == 'market_price' and key in arg_dict.keys():
-            if arg_dict[key] and file_dict[key] != arg_dict[key]:
+            if key not in file_dict.keys():
+                # user passed -p || --price in execution args, but not in the file
+                continue
+            elif arg_dict[key] and file_dict[key] != arg_dict[key]:
+                # user passed -p || --price in execution args to override the file's market_price
                 print(
                     f' updated {arg_dict["symbol"]}\'s current market Price:',
                     Price(file_dict[key]), '=>', Price(arg_dict[key])
@@ -87,20 +91,18 @@ def merge_dictionaries(arg_dict, file_dict):
 
         if key in file_dict.keys():
             arg_dict[key] = file_dict[key]
-        else:
-            print(key, 'not in file')
     
     return arg_dict
 
 
 def convert_value(key, value, symbol):
-    if key == 'interface':
-        return value.lower() == 'True'.lower()
     if key == 'symbol':
         return symbol
     elif key == 'asset_type':
-        choices = asset_type_choices()
-        return choices[value.lower() == choices[1]]
+        for choice in asset_type_choices():
+            if value.lower() == choice.lower():
+                return choice
+        return None
     try:
         value = float(value)
         return (float(value), int(value))[float(value) == int(value)]
