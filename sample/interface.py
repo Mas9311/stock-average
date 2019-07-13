@@ -353,29 +353,19 @@ class GUI(Frame):
                     if index <= 5:
                         self.focused_frame = index
 
-                    if index in [1, 3, 4, 5]:
-                        # arg_dict has an entry for this Frame
-                        key = self.get(index, 'key')
+                    key = self.get(index, 'key')
 
-                        if key not in self.arg_dict.keys():
-                            break
-                        if self.arg_dict[key] is None:
-                            print('The file\'s', key, 'value is invalid.')
-                            break
-                        value = self.arg_dict[self.get(index, 'key')]
-                        if isinstance(value, str):
-                            value = value.upper()
-                        self.get(index, 'frame_var').set_string(value)
-                        # intro_char = ''
-                        # if self.get(index, 'frame_var').intro_char:
-                        #     intro_char = self.get(index, 'frame_var').intro_char
-                        # # self.get(index, 'StringVar').set(f'{intro_char}{value}')
-                    elif index is 2:
-                        # asset_type Radio Frame
-                        options = parameters.asset_type_choices()
-                        option_text = options[self.arg_dict['asset_type'] != options[0]]
-                        # self.get(index, 'frame_var').last_button_selected = option_text
-                        self.get(index, 'frame_var').select(option_text)
+                    if key not in self.arg_dict.keys() or self.arg_dict[key] is None:
+                        # File has invalid data: stop populating
+                        break
+                    if self.arg_dict[key] is None:
+                        print('The file\'s', key, 'value is invalid.')
+                        break
+                    value = self.arg_dict[self.get(index, 'key')]
+                    if index is 1:
+                        value = value.upper()
+                    self.get(index, 'frame_var').set_string(value)
+
                 # resize the gui root once all the Frames have been created
                 self._resize_frame()
 
