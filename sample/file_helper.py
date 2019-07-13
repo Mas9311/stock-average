@@ -39,11 +39,12 @@ def file_keys():
 def export_to_file(arg_dict):
     with open(get_file_path(arg_dict['symbol']), 'w') as symbol_file:
         for key in file_keys():
-            symbol_file.write(f'{key},{arg_dict[key]}\n')
+            if key in arg_dict.keys():
+                symbol_file.write(f'{key},{arg_dict[key]}\n')
         symbol_file.close()
 
 
-def import_from_file(symbol, arg_dict={}):
+def import_from_file(symbol, arg_dict):
     """Read the configurations from the file given and place them into a dictionary format.
     Values are turned from strings into their respective data types."""
     make_sure_dir_exists()
@@ -67,32 +68,27 @@ def import_from_file(symbol, arg_dict={}):
                     return arg_dict, False
                 file_dict[key] = convert_value(key, value, symbol)
             symbol_file.close()
-        print(symbol, 'file loaded successfully.')
+        print(' ', symbol, 'file loaded successfully.')
 
-    if not file_dict:
-        file_dict['symbol'] = symbol
-        for key in file_keys():
-            if key == 'asset_type':
-                file_dict[key] = asset_type_choices()[0]
-            else:
-                file_dict[key] = None
+    arg_dict = merge_dictionaries(arg_dict, file_dict)
     
-    if arg_dict:
-        file_dict = merge_arg_dict_with_file_dict(arg_dict, file_dict)
-    
-    return file_dict, True
+    return arg_dict, True
 
 
-def merge_arg_dict_with_file_dict(arg_dict, file_dict):
+def merge_dictionaries(arg_dict, file_dict):
     for key in file_keys():
-        if key == 'market_price':
-            if arg_dict['market_price'] and file_dict[key] != arg_dict['market_price']:
+        if key == 'market_price' and key in arg_dict.keys():
+            if arg_dict[key] and file_dict[key] != arg_dict[key]:
                 print(
                     f' updated {arg_dict["symbol"]}\'s current market Price:',
-                    Price(file_dict['market_price']), '=>', Price(arg_dict['market_price'])
+                    Price(file_dict[key]), '=>', Price(arg_dict[key])
                 )
                 continue
-        arg_dict[key] = file_dict[key]
+
+        if key in file_dict.keys():
+            arg_dict[key] = file_dict[key]
+        else:
+            print(key, 'not in file')
     
     return arg_dict
 
@@ -105,16 +101,8 @@ def convert_value(key, value, symbol):
     elif key == 'asset_type':
         choices = asset_type_choices()
         return choices[value.lower() == choices[1]]
-    # while True:
     try:
         value = float(value)
         return (float(value), int(value))[float(value) == int(value)]
-        # value = float(value)
-        # if value == int(value):
-        #     return int(value)
-        # return value
     except ValueError:
-        # TODO: ask for new input of the key's value.
-        # response = input('Enter the', key)
-        #  user has manually modified the file, leading to this Error
         return None
