@@ -55,49 +55,67 @@ class Feedback:
                 f'{bot_border_line}\n\n')
 
 
-def price(money, precision):
-    """Something."""
-    return f'${best(money, precision)}'
+class Price:
+    """Converts the money input into a price format with precision.
+    Examples include:
+    Price(0.000000016)  returns $0.00000002
+    Price(0.499, 0)     returns $0
+    Price(0.500, 0)     returns $1
+    Price(11.09, 1)     returns $11.1
+    Price(22, 2)        returns $22.00
+    Price(44.1, 4)      returns $44.1000
+    Price(88.1234, 8)   returns $88.12340000
+    Price(123456)       returns $123,456.00
+    Price(1234567)      returns $1,234,567.00"""
+    def __init__(self, money, precision=2):
+        self.money = money
+        self.precision = precision
+        self.output = '$'
 
+        self.create_output()
 
-def normalize(number):
-    """Returns the number by safely converting to an integer or keeping it as a float.
-    Example outputs:
-        normalize(1.0)      returns 1
-        normalize(22.12)    returns 22.12 """
-    return int(number) if number == int(number) else number
+    def create_output(self):
+        try:
+            self.money = abs(float(str(self.money)))
+            self.precision = abs(int(self.precision))
+        except ValueError:
+            print('Invalid: the money parameter in Price is not a number')
+            self.output = 'Error'
+            return
 
+        if self.precision == 0:
+            self.output += str(int(round(float(self.money), self.precision)))
+            self.place_commas()
+            return
 
-def best(number, precision):
-    """Returns the money in string format by either adding zeros or truncating them.
-    Example outputs:
-        price(1.123, 0)     returns 1
-        price(2, 2)         returns 2
-        price(333.1, 3)     returns 222.100
-        price(888.1234, 8)  returns 888.12340000 """
-    normalized = normalize(number)
-    if normalized is not number:
-        return normalized
+        if self.money and not round(float(self.money), self.precision):
+            # if money != 0.00, but rounding using this precision would lead to a 0.00 dollar value:
+            # recursively call Price with precision+1 until money holds some value > 0.00
+            self.output = Price(self.money, self.precision + 1).output
+        else:
+            # truncate the least-significant decimal digits if money trails farther than precision
+            self.money = str(round(float(self.money), self.precision))
+            if self.money.find('e-') is not -1:
+                # if the money is in scientific notation:
+                # convert back to decimal (max of 14 '0's after '.')
+                self.money = ("%0.15f" % float(self.money)).rstrip('0')
 
-    if precision == 0:  # or number is 0:
-        return int(number)
-    output = repr(round(number, precision))
-    decimal_location = output.find(f'.')
-    if decimal_location is -1:
-        return output
+            # create the leading zeros if precision is longer than 
+            # the location of the least-significant decimal digit
+            zeros = '0' * (self.precision - (len(self.money) - 1 - self.money.find('.')))
+            # combine the dollar sign, money, and trailing zeros
+            self.output += self.money + zeros
+            self.place_commas()
 
-    difference = (len(output) - 1) - decimal_location
-    number_of_zeros = precision - difference
-    for x in range(number_of_zeros):
-        output += f'0'
-    return output
+    def place_commas(self):
+        count = 0
+        for i in range(self.output.find('.') - 1, 1, -1):
+            # walks through the characteristic digits (left-side of decimal point) backwards
+            # and places a comma in the appropriate location 1000 => 1,000
+            count += 1
+            if count % 3 == 0:
+                self.output = self.output[:i] + ',' + self.output[i:]
 
-
-def multiple(count, additional, type_of):
-    """Returns the string to correctly display the optional 's'.
-    Example outputs:
-        multiple(3, 'additional', 'coin')   returns '3 additional coins'
-        multiple(1, '', 'share')            returns '1 share'
-        multiple(3, 'additional', share')   returns '3 additional shares' """
-    type_of += f's' if count != 1 else f''
-    return f'{count} {additional}{type_of}'
+    def __str__(self):
+        """Returns the money in string format by either adding zeros or truncating them."""
+        return self.output
