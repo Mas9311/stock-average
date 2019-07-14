@@ -35,9 +35,9 @@ For cryptocurrencies, potential averages will be displayed in increments of squa
 #### Formula: ####
 
 *n* represents the amount of shares you previously purchased at the *oldPrice*.<br>
-*x* represents the amount of shares you would potentially need to buy at the *currentPrice*.
+*x* represents the amount of shares you would potentially need to buy at the *newPrice*.
 
-<pre>(n * oldPrice) + (x * currentPrice)
+<pre>(n * oldPrice) + (x * newPrice)
 -----------------------------------
               (n + x)</pre>
 
