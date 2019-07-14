@@ -8,13 +8,13 @@ class PotentialAverage:
         self.curr_iter = curr_iter
         self.cost_per = cost_per
         self.additional_cost = self.get_additional_cost()
-        if self.parent.get('asset_type') != 'stock':
+        if self.parent.arg_dict['asset_type'] != 'stock':
             # convert curr_iter to a fraction relative to its coin
-            self.curr_iter = (self.cost_per * self.curr_iter) / self.parent.get('market_price')
+            self.curr_iter = (self.cost_per * self.curr_iter) / self.parent.arg_dict['market_price']
 
-        self.numerator = self.parent.get('quantity') * self.parent.get('current_average')  # (n * oldPrice)
-        self.additional_numerator = self.curr_iter * self.parent.get('market_price')  # (x *currentPrice)
-        self.denominator = self.parent.get('quantity')  # n
+        self.numerator = self.parent.arg_dict['quantity'] * self.parent.arg_dict['current_average']  # (n * oldPrice)
+        self.additional_numerator = self.curr_iter * self.parent.arg_dict['market_price']  # (x *currentPrice)
+        self.denominator = self.parent.arg_dict['quantity']  # n
         self.additional_denominator = self.curr_iter
 
     def get_additional_cost(self):
