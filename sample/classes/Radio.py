@@ -118,7 +118,6 @@ class GuiRadio(FrameBaseClass):
         self.arg_set(option_text)
 
     def set_string(self, value):
-        value = value.lower()
         super().set_string(value)
         self.select(value)
 
