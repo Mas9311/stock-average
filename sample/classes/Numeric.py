@@ -74,10 +74,14 @@ class GuiNumeric(EntryBaseClass):
 
     def arg_set(self, value):
         if value:
+            if value[len(str(value)) - 1] == '.':
+                value = str(value) + '0'
             value = float(value)
             if value == int(value):
                 value = int(value)
             super().arg_set(value)
+            print(self.parent.arg_dict)
+            self.parent.calculate_potential_averages()
 
     def delete_extra_decimal_points(self):
         if self.entry.get().count('.'):
