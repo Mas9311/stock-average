@@ -274,11 +274,36 @@ class GUI(Frame):
             self.create_next_frame(2)  # Create Radio 'Asset Type' Frame
             self.populate_from_file()
 
-    def _resize_frame(self):
-        self.root.update_idletasks()
-        w = 450 if self.root.winfo_reqwidth() < 450 else self.root.winfo_reqwidth()
-        h = self.root.winfo_reqheight()
-        self.root.geometry(f'{w}x{h}')
+    def calculate_potential_averages(self):
+        for index, key in zip(range(2, 7), file_helper.file_keys() + ['allotted_money']):
+            if key not in self.arg_dict.keys() or self.get(index, 'frame_var').is_empty():
+                return
+
+        self.arg_dict['potential_average'] = []
+
+        if self.arg_dict['asset_type'] == 'stock':
+            # set number of iteration using integer division: "How many shares you can buy"
+            iterations = int(self.arg_dict['allotted_money'] // self.arg_dict['market_price'])
+            cost_per = self.arg_dict['market_price']
+        else:
+            iterations = int(sqrt(self.arg_dict['allotted_money']))
+            cost_per = self.arg_dict['allotted_money'] / iterations
+
+        if iterations > 10:
+            # if the potential averages would be a wall of text: scale it down to ~10 potential averages
+            scale = int(iterations // 10)
+            if 14 < iterations < 20:
+                # iterations is between [15, 19] => [7, 9]
+                scale = 2
+
+            if scale > 1:
+                # if scale is worth calculating (and prevents ZeroDivisionError)
+                iterations //= scale
+                cost_per *= scale
+
+        for curr_iter in range(iterations):
+            self.arg_dict['potential_average'].append(PotentialAverage(self, curr_iter + 1, cost_per))
+        self.get(7, 'frame_var').create_widgets()
 
     def create_next_frame(self, next_index):
         """Will create the next frame if:
@@ -287,7 +312,7 @@ class GUI(Frame):
         2. The next_index's Frame has not been already created"""
         if next_index < self.len_frames() and self.get(next_index, 'frame_var') is None:
             self._frames[next_index]['frame_var'] = self._create_frame_type(next_index)
-            self._resize_frame()
+            self.resize_frame()
 
     def destroy_all_frames_after(self, keep_index):
         for curr_index in range(self.len_frames()):
@@ -297,7 +322,7 @@ class GUI(Frame):
             'interface': self.arg_dict['interface'],
             'symbol': self.arg_dict['symbol'],
         }
-        for index, key in zip(range(2, keep_index), file_helper.file_keys()):
+        for index, key in zip(range(2, keep_index), file_helper.file_keys() + ['allotted_money']):
             if key in self.arg_dict.keys():
                 temp_dict[key] = self.arg_dict[key]
         self.arg_dict = temp_dict
@@ -308,7 +333,7 @@ class GUI(Frame):
         if self.get(index, 'frame_var'):
             self.get(index, 'frame_var').destroy()  # recursively destroys the Frame and all widgets inside it
             self._frames[index]['frame_var'] = None  # forget the reference, ∴ send to GC
-            self._resize_frame()  # resize the frame since this Frame was destroyed
+            self.resize_frame()  # resize the frame since this Frame was destroyed
         else:
             print(index, 'has not been created')
 
@@ -367,7 +392,13 @@ class GUI(Frame):
                     self.get(index, 'frame_var').set_string(value)
 
                 # resize the gui root once all the Frames have been created
-                self._resize_frame()
+                self.resize_frame()
+
+    def resize_frame(self):
+        self.root.update_idletasks()
+        w = 450 if self.root.winfo_reqwidth() < 450 else self.root.winfo_reqwidth()
+        h = self.root.winfo_reqheight()
+        self.root.geometry(f'{w}x{h}')
 
     def save_to_file(self):
         if self.focused_frame <= 5:
