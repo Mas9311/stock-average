@@ -37,6 +37,9 @@ def file_keys():
 
 
 def export_to_file(arg_dict):
+    """Write the arg_dict key,values into the appropriate symbols file."""
+    make_sure_dir_exists()
+
     with open(get_file_path(arg_dict['symbol']), 'w') as symbol_file:
         for key in file_keys():
             if key in arg_dict.keys():
