@@ -67,6 +67,9 @@ class GuiRadio(FrameBaseClass):
         self.parent.arg_dict[self.key] = option_text
         self.parent.save_to_file()
 
+        if self.index is 2 and self.parent.get(7, 'frame_var') is not None:
+            self.parent.get(7, 'frame_var').update_scale()
+
     def create_radio_widgets(self):
         """Only called when creating a new Radio instance, in the _init_ method above."""
         self.bind('<FocusIn>', self.radio_focus_in)  # cursor lies within this Frame
@@ -119,5 +122,9 @@ class GuiRadio(FrameBaseClass):
 
     def set_string(self, value):
         super().set_string(value)
+        self.verbose = not self.verbose
         self.select(value)
+        self.verbose = not self.verbose
 
+    def set_type_of(self):
+        self.parent.arg_dict['type_of'] = 'share' if self.parent.arg_dict['asset_type'] == 'stock' else 'coin'
