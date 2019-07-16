@@ -46,19 +46,14 @@ class GuiAlpha(EntryBaseClass):
         If the textbox contains a space anywhere else: clear all text. (the description is present)
         If no characters currently remain in the textbox: destroy all gui after this Frame.
         Else the is at least one character: check if the file exists"""
-        char = char if char is not None else event.char
-
-        self.correct_entry(char)
-
+        self.correct_entry(char if char is not None else event.char)
         self.arg_set(self.entry.get())
 
         if not self._destroyed_for_empty_input():
             # If at least one character remains
             if file_helper.file_exists(self.entry.get()):
                 # If user previously saved a file for this symbol, load it!
-                if event is not None:
-                    # If not manually updating the Entry's text
-                    self.parent.populate_from_file()
+                self.parent.populate_from_file()
             else:
                 # Else the file does not exist
                 if self.last_text_entered != self.entry.get():
@@ -67,7 +62,6 @@ class GuiAlpha(EntryBaseClass):
                 self.parent.create_next_frame(self.index + 1)
 
         self.last_text_entered = self.entry.get()
-        self.parent.save_to_file()
 
     def correct_entry(self, char):
         if self.parent.is_char_printable(char):
@@ -85,3 +79,6 @@ class GuiAlpha(EntryBaseClass):
                 # Received invalid input: {numeric || punctuation}
                 if not self._delete_spaces():
                     self._delete_character(INSERT, -1)
+
+    def set_string(self, value):
+        super().set_string(str(value).upper())
