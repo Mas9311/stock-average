@@ -68,7 +68,7 @@ class GuiRadio(FrameBaseClass):
         self.parent.save_to_file()
 
         if self.index is 2 and self.parent.get(7, 'frame_var') is not None:
-            self.parent.get(7, 'frame_var').update_scale()
+            self.parent.calculate_potential_averages()
 
     def create_radio_widgets(self):
         """Only called when creating a new Radio instance, in the _init_ method above."""
