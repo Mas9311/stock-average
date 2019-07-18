@@ -2,37 +2,49 @@ from sample.format import Price
 
 
 class PotentialAverage:
-    def __init__(self, parent, curr_iter, cost_per):
+    def __init__(self, parent, curr_iter):
         self.parent = parent
-
         self.curr_iter = curr_iter
-        self.cost_per = cost_per
-        self.additional_cost = self.get_additional_cost()
-        if self.parent.arg_dict['asset_type'] != 'stock':
-            # convert curr_iter to a fraction relative to its coin
-            self.curr_iter = (self.cost_per * self.curr_iter) / self.parent.arg_dict['market_price']
+        self.cost_per = self.parent.arg_dict['cost_per']
 
-        self.numerator = self.parent.arg_dict['quantity'] * self.parent.arg_dict['current_average']  # (n * oldPrice)
-        self.additional_numerator = self.curr_iter * self.parent.arg_dict['market_price']  # (x *currentPrice)
-        self.denominator = self.parent.arg_dict['quantity']  # n
-        self.additional_denominator = self.curr_iter
+        self.n = None  # number of shares user currently has
+        self.x = None  # number of shares user is about to purchase
+        self.old_price = None  # user's current average
+        self.new_price = None  # price per share || can be multiple shares if scaled
 
-    def get_additional_cost(self):
-        return round(self.curr_iter * self.cost_per, 2)
+        self.numerator_old = None  # (n * old_price)
+        self.numerator_new = None  # (x * new_price)
+        self.numerator = None  # (n * old_price) + (x * new_price)
+        self.denominator = None  # (n + x)
 
-    def average(self):
-        """Returns the average is float format without rounding."""
-        num = self.numerator + self.additional_numerator
-        den = self.denominator + self.additional_denominator
-        return round(num / den, 3)
+        self.average = None  # numerator / denominator
+
+        self.assign_variables()
+
+    def assign_variables(self):
+        self.n = self.parent.arg_dict['quantity']
+        self.old_price = self.parent.arg_dict['current_average']
+        self.numerator_old = self.n * self.old_price
+
+        self.new_price = self.cost_per
+        self.x = self.curr_iter
+        self.numerator_new = self.x * self.new_price
+
+        self.numerator = self.numerator_old + self.numerator_new
+        self.denominator = self.n + self.x
+        if self.new_price != self.parent.arg_dict['market_price']:
+            self.denominator = self.n + ((self.cost_per * self.curr_iter) / self.parent.arg_dict['market_price'])
+
+        self.average = round(self.numerator / self.denominator, 3)
 
     def get_coordinates(self):
         """Returns the (x, y) coordinates to plot this PotentialAverage instance on a graph"""
-        return self.get_additional_cost(), self.average()
+        return self.numerator_new, self.average
 
     def __str__(self):
         """Returns the potential average in string format."""
+        x_coordinate, y_coordinate = self.get_coordinates()
         return (
-            f'After spending {Price(self.additional_cost, 2)}, '
-            f'your new average would be {Price(self.average(), 2)}.'
+            f'After spending {Price(x_coordinate, 2)}, '
+            f'your new average would be {Price(y_coordinate, 2)}.'
         )
