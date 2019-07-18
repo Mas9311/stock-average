@@ -99,14 +99,17 @@ class CLI:
     def calculate_potentials(self):
         """The user may not want to spend all of the money they designated,
         so this will calculate the potential averages incrementally"""
+        # delete all previously calculated potential_average instances
+        self.arg_dict['potential_average'] = []
+
         if self.get('asset_type') == 'stock':
             # set number of iteration using integer division: "How many shares you can buy"
             iterations = int(self.get('allotted_money') // self.get('market_price'))
-            cost_per = self.get('market_price')
-            print('You can buy', iterations, 'shares of', self.symbol, 'at', Price(cost_per))
+            self.arg_dict['cost_per'] = self.get('market_price')
+            print('You can buy', iterations, 'shares of', self.symbol, 'at', Price(self.arg_dict['cost_per']))
         else:
             iterations = int(sqrt(self.get('allotted_money')))
-            cost_per = self.get('allotted_money') / iterations
+            self.arg_dict['cost_per'] = self.get('allotted_money') / iterations
 
         if iterations > 10:
             # if the potential averages would be a wall of text: scale it down to ~10 potential averages
@@ -118,10 +121,10 @@ class CLI:
             if scale > 1:
                 # if scale is worth calculating (and prevents ZeroDivisionError)
                 iterations //= scale
-                cost_per *= scale
+                self.arg_dict['cost_per'] *= scale
 
         for curr_iter in range(iterations):
-            self.potential_averages.append(PotentialAverage(self, curr_iter + 1, cost_per))
+            self.potential_averages.append(PotentialAverage(self, curr_iter + 1))
 
     def retrieve_allotted_money(self):
         while True:
