@@ -237,11 +237,11 @@ class GUI(Frame):
                 'label': 'Allotted Money',
                 'type': 'Currency',
             },
-            {  # Potential Average Frame
+            {  # Display Frame
                 'frame_var': None,
                 'index': 7,
                 'key': 'potential_average',
-                'label': 'Potential Average',
+                'label': 'Display Type',
                 'options': ['T-Chart', 'Graph'],
                 'type': 'Transform',
             }
@@ -279,31 +279,38 @@ class GUI(Frame):
             if key not in self.arg_dict.keys() or self.get(index, 'frame_var').is_empty():
                 return
 
+        # delete all previously calculated potential_average instances
         self.arg_dict['potential_average'] = []
 
         if self.arg_dict['asset_type'] == 'stock':
             # set number of iteration using integer division: "How many shares you can buy"
             iterations = int(self.arg_dict['allotted_money'] // self.arg_dict['market_price'])
-            cost_per = self.arg_dict['market_price']
+            self.arg_dict['cost_per'] = self.arg_dict['market_price']
         else:
             iterations = int(sqrt(self.arg_dict['allotted_money']))
-            cost_per = self.arg_dict['allotted_money'] / iterations
+            self.arg_dict['cost_per'] = self.arg_dict['allotted_money'] / iterations
+
+        if 'amount_per' not in self.arg_dict.keys() or not self.arg_dict['amount_per']:
+            # amount_per is not set, set it to the default of 1 share/coin
+            self.arg_dict['amount_per'] = 1
 
         if iterations > 10:
             # if the potential averages would be a wall of text: scale it down to ~10 potential averages
-            scale = int(iterations // 10)
+            self.arg_dict['amount_per'] = int(iterations // 10)
             if 14 < iterations < 20:
                 # iterations is between [15, 19] => [7, 9]
-                scale = 2
+                self.arg_dict['amount_per'] = 2
 
-            if scale > 1:
+            if self.arg_dict['amount_per'] > 1:
                 # if scale is worth calculating (and prevents ZeroDivisionError)
-                iterations //= scale
-                cost_per *= scale
+                iterations //= self.arg_dict['amount_per']
+                self.arg_dict['cost_per'] *= self.arg_dict['amount_per']
 
+        self.arg_dict['potential_average'].append(PotentialAverage(self, 0))
         for curr_iter in range(iterations):
-            self.arg_dict['potential_average'].append(PotentialAverage(self, curr_iter + 1, cost_per))
-        self.get(7, 'frame_var').create_widgets()
+            self.arg_dict['potential_average'].append(PotentialAverage(self, curr_iter + 1))
+        self.get(7, 'frame_var').create_display_frame()
+        self.get(7, 'frame_var').update_scale()
 
     def create_next_frame(self, next_index):
         """Will create the next frame if:
@@ -369,30 +376,24 @@ class GUI(Frame):
 
     def populate_from_file(self):
         """Read data from file, create the Frame, then populate with data"""
+        # saves the 'frame with the cursor' to a temporary value to be restored after.
+        temp_focused_frame = self.focused_frame
         if file_helper.file_exists(self.arg_dict['symbol']):
             self.arg_dict, success = file_helper.import_from_file(self.arg_dict['symbol'], self.arg_dict)
             if success:
                 for index in range(1, self.len_frames() - 1):
                     # Create the Frame
                     self.create_next_frame(index)
-                    if index <= 5:
-                        self.focused_frame = index
-
                     key = self.get(index, 'key')
 
                     if key not in self.arg_dict.keys() or self.arg_dict[key] is None:
-                        # File has invalid data: stop populating
+                        # File has missing || invalid data: stop creating Frames and populating
                         break
-                    if self.arg_dict[key] is None:
-                        print('The file\'s', key, 'value is invalid.')
-                        break
-                    value = self.arg_dict[self.get(index, 'key')]
-                    if index is 1:
-                        value = value.upper()
-                    self.get(index, 'frame_var').set_string(value)
+                    self.get(index, 'frame_var').set_string(self.arg_dict[self.get(index, 'key')])
 
                 # resize the gui root once all the Frames have been created
                 self.resize_frame()
+        self.focused_frame = temp_focused_frame
 
     def resize_frame(self):
         self.root.update_idletasks()
@@ -401,9 +402,9 @@ class GUI(Frame):
         self.root.geometry(f'{w}x{h}')
 
     def save_to_file(self):
-        if self.focused_frame <= 5:
+        if 2 <= self.focused_frame <= 5:
             valid_entries = True
-            for index in [1, 2, 3, 4, 5]:
+            for index in range(2, 6):
                 if self.get(index, 'frame_var'):
                     if self.get(index, 'frame_var').is_empty():
                         # the Frame is empty: do not save to file
