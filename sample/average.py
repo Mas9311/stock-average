@@ -5,7 +5,6 @@ class PotentialAverage:
     def __init__(self, parent, curr_iter):
         self.parent = parent
         self.curr_iter = curr_iter
-        self.cost_per = self.parent.arg_dict['cost_per']
 
         self.n = None  # number of shares user currently has
         self.x = None  # number of shares user is about to purchase
@@ -26,14 +25,12 @@ class PotentialAverage:
         self.old_price = self.parent.arg_dict['current_average']
         self.numerator_old = self.n * self.old_price
 
-        self.new_price = self.cost_per
-        self.x = self.curr_iter
+        self.new_price = self.parent.arg_dict['market_price']
+        self.x = self.curr_iter * self.parent.arg_dict['amount_per']
         self.numerator_new = self.x * self.new_price
 
         self.numerator = self.numerator_old + self.numerator_new
         self.denominator = self.n + self.x
-        if self.new_price != self.parent.arg_dict['market_price']:
-            self.denominator = self.n + ((self.cost_per * self.curr_iter) / self.parent.arg_dict['market_price'])
 
         self.average = round(self.numerator / self.denominator, 3)
 
