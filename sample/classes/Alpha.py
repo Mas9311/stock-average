@@ -1,6 +1,7 @@
 from tkinter import *
-from .base_class import TextBaseClass, EntryBaseClass
+
 from sample import file_helper
+from sample.classes.base_class import TextBaseClass, EntryBaseClass
 
 
 class CliAlpha(TextBaseClass):
