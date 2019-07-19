@@ -92,8 +92,7 @@ class FrameBaseClass(Frame):
         if self.arg_get() != value:
             self.parent.arg_dict[self.key] = value
             self.parent.save_to_file()
-            if 2 <= self.index <= 6:
-                self.parent.calculate_potential_averages()
+            self.parent.calculate_potential_averages()
 
     def create_label_widget(self):
         self.label = Label(self, text=self.parent.get(self.index, 'label'), width=15)
