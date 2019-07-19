@@ -17,6 +17,7 @@ class TitleBar(Frame):
     def _close(self):
         """Clicking the '×' button closes the window and exits the program."""
         self.root.destroy()
+        sys.exit()
 
     def create_title_bar_widgets(self):
         """Only called when creating a new TitleBar instance, in the _init_ method above."""
