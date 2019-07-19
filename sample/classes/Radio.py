@@ -115,10 +115,11 @@ class GuiRadio(FrameBaseClass):
         self.arg_set(option_text)
 
     def set_string(self, value):
-        super().set_string(value)
-        self.verbose = not self.verbose
-        self.select(value)
-        self.verbose = not self.verbose
+        if self.string_var.get() != value:
+            super().set_string(value)
+            self.verbose = not self.verbose
+            self.select(value)
+            self.verbose = not self.verbose
 
     def set_type_of(self):
         self.parent.arg_dict['type_of'] = 'share' if self.parent.arg_dict['asset_type'] == 'stock' else 'coin'
