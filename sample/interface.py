@@ -1,11 +1,12 @@
 from tkinter import *
-from math import sqrt
+from math import floor
+
 from sample import file_helper, menu, parameters
-from sample.average import PotentialAverage
 from sample.format import Price
 from sample.classes.Alpha import CliAlpha, GuiAlpha
-from sample.classes.Radio import CliRadio, GuiRadio
+from sample.classes.Average import PotentialAverage
 from sample.classes.Numeric import CliCurrency, CliNumeric, GuiCurrency, GuiNumeric
+from sample.classes.Radio import CliRadio, GuiRadio
 from sample.classes.TitleBar import TitleBar
 from sample.classes.Transform import Transform
 
@@ -28,7 +29,6 @@ class CLI:
         self.current_average = None
         self.market_price = None
         self.allotted_money = None
-        self.potential_averages = None  # list of PotentialAverage instances
 
         self.create_variables()
         self.define_variables()
@@ -51,13 +51,7 @@ class CLI:
 
             # ask user for how much they are willing to spend today
             self.retrieve_allotted_money()
-            self.potential_averages = []
             self.calculate_potentials()
-
-            # prints potential averages incrementally based on the allotted_money given
-            for potential_average in self.potential_averages:
-                print(potential_average)
-            print()
 
             if menu.ending_menu(self.get('symbol')) == 'different':
                 # user selects to continue the program and choose a different symbol
@@ -99,32 +93,24 @@ class CLI:
     def calculate_potentials(self):
         """The user may not want to spend all of the money they designated,
         so this will calculate the potential averages incrementally"""
-        # delete all previously calculated potential_average instances
+
         self.arg_dict['potential_average'] = []
 
-        if self.get('asset_type') == 'stock':
-            # set number of iteration using integer division: "How many shares you can buy"
-            iterations = int(self.get('allotted_money') // self.get('market_price'))
-            self.arg_dict['cost_per'] = self.get('market_price')
-            print('You can buy', iterations, 'shares of', self.symbol, 'at', Price(self.arg_dict['cost_per']))
+        if self.arg_dict['asset_type'] == 'stock':
+            iterations = int(self.arg_dict['allotted_money'] / self.arg_dict['market_price'])
+            self.arg_dict['amount_per'] = 1
+            if iterations > 10:
+                self.arg_dict['amount_per'] = int(round(iterations / 10, 0))
+            self.arg_dict['cost_per'] = self.arg_dict['market_price'] * self.arg_dict['amount_per']
+            iterations = floor(self.arg_dict['allotted_money'] / self.arg_dict['cost_per'])
         else:
-            iterations = int(sqrt(self.get('allotted_money')))
-            self.arg_dict['cost_per'] = self.get('allotted_money') / iterations
-
-        if iterations > 10:
-            # if the potential averages would be a wall of text: scale it down to ~10 potential averages
-            scale = int(iterations // 10)
-            if 14 < iterations < 20:
-                # iterations is between [15, 19] => [7, 9]
-                scale = 2
-
-            if scale > 1:
-                # if scale is worth calculating (and prevents ZeroDivisionError)
-                iterations //= scale
-                self.arg_dict['cost_per'] *= scale
+            iterations = 10
+            self.arg_dict['cost_per'] = self.arg_dict['allotted_money'] / iterations
+            self.arg_dict['amount_per'] = self.arg_dict['cost_per'] / self.arg_dict['market_price']
 
         for curr_iter in range(iterations):
-            self.potential_averages.append(PotentialAverage(self, curr_iter + 1))
+            print(PotentialAverage(self, curr_iter + 1))
+        print()
 
     def retrieve_allotted_money(self):
         while True:
@@ -279,41 +265,37 @@ class GUI(Frame):
 
     def calculate_potential_averages(self):
         for index, key in zip(range(2, 7), file_helper.file_keys() + ['allotted_money']):
-            if key not in self.arg_dict.keys() or self.get(index, 'frame_var').is_empty():
+            if key not in self.arg_dict.keys() or not bool(self.get(index, 'frame_var')) or self.get(index, 'frame_var').is_empty():
                 return
 
         # delete all previously calculated potential_average instances
         self.arg_dict['potential_average'] = []
 
         if self.arg_dict['asset_type'] == 'stock':
-            # set number of iteration using integer division: "How many shares you can buy"
-            iterations = int(self.arg_dict['allotted_money'] // self.arg_dict['market_price'])
-            self.arg_dict['cost_per'] = self.arg_dict['market_price']
-        else:
-            iterations = int(sqrt(self.arg_dict['allotted_money']))
-            self.arg_dict['cost_per'] = self.arg_dict['allotted_money'] / iterations
+            # stocks can only be bought in increments of whole shares
+            if self.arg_dict['allotted_money'] < self.arg_dict['market_price']:
+                print(Price(self.arg_dict['allotted_money']), 'is not enough to buy a share.')
+                if bool(self.get(7, 'frame_var')):
+                    self.get(7, 'frame_var').destroy_scale()
+                    self.get(7, 'frame_var').destroy_display_frame()
+                return
 
-        if 'amount_per' not in self.arg_dict.keys() or not self.arg_dict['amount_per']:
-            # amount_per is not set, set it to the default of 1 share/coin
+            iterations = int(self.arg_dict['allotted_money'] / self.arg_dict['market_price'])
             self.arg_dict['amount_per'] = 1
-
-        if iterations > 10:
-            # if the potential averages would be a wall of text: scale it down to ~10 potential averages
-            self.arg_dict['amount_per'] = int(iterations // 10)
-            if 14 < iterations < 20:
-                # iterations is between [15, 19] => [7, 9]
-                self.arg_dict['amount_per'] = 2
-
-            if self.arg_dict['amount_per'] > 1:
-                # if scale is worth calculating (and prevents ZeroDivisionError)
-                iterations //= self.arg_dict['amount_per']
-                self.arg_dict['cost_per'] *= self.arg_dict['amount_per']
+            if iterations > 10:
+                self.arg_dict['amount_per'] = int(round(iterations / 10, 0))
+            self.arg_dict['cost_per'] = self.arg_dict['market_price'] * self.arg_dict['amount_per']
+            iterations = floor(self.arg_dict['allotted_money'] / self.arg_dict['cost_per'])
+        else:
+            iterations = 10
+            self.arg_dict['cost_per'] = self.arg_dict['allotted_money'] / iterations
+            self.arg_dict['amount_per'] = self.arg_dict['cost_per'] / self.arg_dict['market_price']
 
         self.arg_dict['potential_average'].append(PotentialAverage(self, 0))
         for curr_iter in range(iterations):
             self.arg_dict['potential_average'].append(PotentialAverage(self, curr_iter + 1))
-        self.get(7, 'frame_var').create_display_frame()
-        self.get(7, 'frame_var').update_scale()
+
+        self.get(7, 'frame_var').update()
 
     def create_next_frame(self, next_index):
         """Will create the next frame if:
@@ -400,15 +382,16 @@ class GUI(Frame):
 
     def resize_frame(self):
         self.root.update_idletasks()
-        w = 450 if self.root.winfo_reqwidth() < 450 else self.root.winfo_reqwidth()
+        w = 400 if self.root.winfo_reqwidth() < 400 else self.root.winfo_reqwidth()
         h = self.root.winfo_reqheight()
         self.root.geometry(f'{w}x{h}')
 
     def save_to_file(self):
-        if 2 <= self.focused_frame <= 5:
+        if self.focused_frame in range(2, 6):
+            # user is modifying a variable between asset_type and market_price
             valid_entries = True
             for index in range(2, 6):
-                if self.get(index, 'frame_var'):
+                if bool(self.get(index, 'frame_var')):
                     if self.get(index, 'frame_var').is_empty():
                         # the Frame is empty: do not save to file
                         valid_entries = False
