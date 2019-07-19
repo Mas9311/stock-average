@@ -1,6 +1,7 @@
 from tkinter import *
+
+from sample.classes.base_class import TextBaseClass, EntryBaseClass
 from sample.format import Price
-from .base_class import TextBaseClass, EntryBaseClass
 
 
 # CLI interface classes
@@ -80,10 +81,13 @@ class GuiNumeric(EntryBaseClass):
             if value == int(value):
                 value = int(value)
             super().arg_set(value)
-            self.parent.calculate_potential_averages()
 
     def correct_entry(self, char):
         self.place_intro_char()
+        self.delete_extra_decimal_points()
+        self.delete_for_max_length()
+        self.move_cursor()
+
         if self.parent.is_char_printable(char):
             # Received a printable character: {alpha || numeric || punctuation}
             if self.parent.is_char_valid(char, self.valid_chars):
@@ -97,14 +101,15 @@ class GuiNumeric(EntryBaseClass):
                 if not self._delete_spaces():
                     self._delete_character(INSERT, -1, END)
 
-        self.delete_extra_decimal_points()
-        self.move_cursor()
-
     def delete_extra_decimal_points(self):
         if self.entry.get().count('.'):
             # If there is at least 1 decimal point
             while self.entry.get().count('.') > 1:
                 self.entry.delete(self.find_furthest_decimal_point())
+
+    def delete_for_max_length(self):
+        if len(self.entry.get()) > 15:
+            self.entry.delete(15, END)
 
     def entry_text_valid(self):
         try:
@@ -152,7 +157,6 @@ class GuiNumeric(EntryBaseClass):
         if not self._destroyed_for_empty_input():
             # Entry text contains user input
             self.parent.create_next_frame(self.index + 1)
-
         self.arg_set(self.entry.get())
 
 
