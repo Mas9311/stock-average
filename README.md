@@ -7,6 +7,8 @@ Note: the **symbols/** folder will be created to store each of your entries so y
 
 ## Usage ##
 
+Prerequisite: <code>pip3 install matplotlib</code><br>
+
 #### Select your Operating System for information on downloading and running:
 
 <details><summary>Linux / Unix</summary>
@@ -16,9 +18,20 @@ Note: the **symbols/** folder will be created to store each of your entries so y
   Append the <code>-h</code> | <code>--help</code> argument to view all accepted arguments.<br>
 </details>
 <details><summary>Windows</summary>
-  1. Open a Terminal window and paste: <code>git clone https://github.com/Mas9311/stock-average.git</code><br>
-  2. <code>cd stock-average/</code><br>
-  3. Run the program: <code>python.exe run.py</code><br>
+  1. Open a Terminal window. If you don't know how, use the default: [Windows + r] "cmd" [Enter]<br>
+  2. Paste: <code>cd Desktop && git clone https://github.com/Mas9311/stock-average.git</code><br>
+  <details><summary>If you encounter an error</summary>
+    <code>'git' is not recognized as an internal or external command, operable program or batch file.</code><br>
+    Means that you either:<br>
+    <h4>Have not downloaded git yet</h4>
+     - Download git by visiting https://git-scm.com/download/win<br>
+     - Install the executable. If you don't know, use the default value.<br>
+     - For the terminal emulator (MinTTY | cmd), I recommend "Use Windows' default console window".<br>
+    <h4>You need to set the PATH variable. This guide will help you:</h4>
+    https://stackoverflow.com/a/4493004/10344943 <br>
+  </details>
+  3. <code>cd stock-average/</code><br>
+  4. Run the program: <code>python.exe run.py</code><br>
   Append the <code>-h</code> | <code>--help</code> argument to view all accepted arguments.<br>
 </details>
 
