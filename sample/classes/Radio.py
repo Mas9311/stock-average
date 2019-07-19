@@ -1,6 +1,7 @@
 from tkinter import *
+
 from sample import menu
-from .base_class import TextBaseClass, FrameBaseClass
+from sample.classes.base_class import TextBaseClass, FrameBaseClass
 
 
 class CliRadio(TextBaseClass):
@@ -58,18 +59,14 @@ class GuiRadio(FrameBaseClass):
         self.current_button_selected = None
         self.verbose = True
 
+        self.bind_radio_frame()
         self.create_radio_widgets()
 
-    def arg_get(self):
-        return self.parent.arg_dict[self.key]
-
-    def arg_set(self, option_text):
-        self.parent.arg_dict[self.key] = option_text
-        self.parent.save_to_file()
+    def bind_radio_frame(self):
+        self.bind('<FocusIn>', self.radio_focus_in)  # cursor lies within this Frame
 
     def create_radio_widgets(self):
         """Only called when creating a new Radio instance, in the _init_ method above."""
-        self.bind('<FocusIn>', self.radio_focus_in)  # cursor lies within this Frame
 
         self.label = Label(self, text=self.parent.get(self.index, 'label'), width=15)
         self.label.pack(side=LEFT, anchor=W)
@@ -119,5 +116,9 @@ class GuiRadio(FrameBaseClass):
 
     def set_string(self, value):
         super().set_string(value)
+        self.verbose = not self.verbose
         self.select(value)
+        self.verbose = not self.verbose
 
+    def set_type_of(self):
+        self.parent.arg_dict['type_of'] = 'share' if self.parent.arg_dict['asset_type'] == 'stock' else 'coin'

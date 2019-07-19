@@ -84,11 +84,15 @@ class FrameBaseClass(Frame):
         self.string_var = StringVar()
 
     def arg_get(self):
-        return self.parent.arg_dict[self.key]
+        if self.key in self.parent.arg_dict.keys():
+            return self.parent.arg_dict[self.key]
+        return None
 
     def arg_set(self, value):
-        self.parent.arg_dict[self.key] = value
-        self.parent.save_to_file()
+        if self.arg_get() != value:
+            self.parent.arg_dict[self.key] = value
+            self.parent.save_to_file()
+            self.parent.calculate_potential_averages()
 
     def create_label_widget(self):
         self.label = Label(self, text=self.parent.get(self.index, 'label'), width=15)
@@ -109,11 +113,7 @@ class FrameBaseClass(Frame):
 class EntryBaseClass(FrameBaseClass):
     def __init__(self, parent, index):
         super().__init__(parent, index)
-        if 'description' in self.parent.get_keys(self.index):
-            self.description = self.parent.get(self.index, 'description')
-            self.disabled = False
-        else:
-            self.disabled = True
+        self.description = self.parent.get(self.index, 'description')
         self.entry = None
         self.intro_char = ''  # placed at the beginning of the Entry's textbox when cursor is within
         self.valid_chars = None
@@ -122,7 +122,7 @@ class EntryBaseClass(FrameBaseClass):
 
     def _clear_description(self):
         """If the Entry's textbox contains the description: clear the Entry's textbox."""
-        if not self.disabled and self.entry.get() == self.description:
+        if self.entry.get() == self.description:
             self.entry.delete(0, END)
 
     def _delete_spaces(self):
@@ -169,7 +169,7 @@ class EntryBaseClass(FrameBaseClass):
 
     def _insert_description(self):
         """If the Entry's textbox has no user input: insert the description."""
-        if not self.disabled and self.is_empty():
+        if self.is_empty():
             self.entry.delete(0, END)
             self.entry.insert(0, self.description)
 
@@ -177,15 +177,13 @@ class EntryBaseClass(FrameBaseClass):
         self.bind('<FocusIn>', self.focus_in)  # cursor lies within this Frame
         self.bind('<FocusOut>', self.focus_out)  # cursor has left this Frame
 
-        if not self.disabled:
-            self.entry.bind('<Enter>', self.mouse_enters_entry)
-            self.entry.bind('<Leave>', self.mouse_leaves_entry)
-            self.entry.bind('<Insert>', lambda e: 'break')  # disable Insert
-            self.entry.bind('<Control-v>', lambda e: 'break')  # disable paste
-            self.entry.bind('<Control-y>', lambda e: 'break')  # disable uncommon undo (paste in tkinter)
-            self.entry.bind('<Button-3>', lambda e: 'break')  # disable right-click
-        else:
-            self.entry.configure(state='readonly')
+        self.entry.bind('<Enter>', self.mouse_enters_entry)
+        self.entry.bind('<Leave>', self.mouse_leaves_entry)
+        self.entry.bind('<Insert>', lambda e: 'break')  # disable Insert
+        self.entry.bind('<Control-v>', lambda e: 'break')  # disable paste
+        self.entry.bind('<Control-c>', lambda e: 'break')  # disable paste
+        self.entry.bind('<Control-y>', lambda e: 'break')  # disable uncommon undo (paste in tkinter)
+        self.entry.bind('<Button-3>', lambda e: 'break')  # disable right-click
 
     def create_entry_widget(self):
         self.entry = Entry(self, textvariable=self.string_var)
@@ -210,10 +208,9 @@ class EntryBaseClass(FrameBaseClass):
         self._insert_description()
 
     def is_empty(self):
-        if not self.disabled:
-            if self.entry.get() != self.description:
-                return self.entry.get() == ('', self.intro_char)[bool(self.intro_char)]
-            return True
+        if self.entry.get() and self.entry.get() != self.description:
+            return self.entry.get() == ('', self.intro_char)[bool(self.intro_char)]
+        return True
 
     def mouse_enters_entry(self, _):
         """Mouse just started hovering over this Entry's textbox.
@@ -228,7 +225,7 @@ class EntryBaseClass(FrameBaseClass):
             self._insert_description()
 
     def place_intro_char(self):
-        if self.intro_char is not None:
+        if self.intro_char:
             if not self.entry.get().count(self.intro_char):
                 self.entry.insert(0, self.intro_char)
 

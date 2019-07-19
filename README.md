@@ -7,31 +7,43 @@ Note: the **symbols/** folder will be created to store each of your entries so y
 
 ## Usage ##
 
-1. Open a Terminal window and paste: `git clone https://github.com/Mas9311/stock-average.git`<br>
-1. `cd stock-average/`<br>
-  - To run the program, enter:
-    - Linux: `python3 run.py`<br>
-    - Windows: `python.exe run.py`
-  - If you want to pass additional parameters, see --help screen for more info<br>
+#### Select your Operating System for information on downloading and running:
+
+<details><summary>Linux / Unix</summary>
+  1. Open a Terminal window and paste: <code>git clone https://github.com/Mas9311/stock-average.git</code><br>
+  2. <code>cd stock-average/</code><br>
+  3. Run the program: <code>python3 run.py</code><br>
+  Append the <code>-h</code> | <code>--help</code> argument to view all accepted arguments.<br>
+</details>
+<details><summary>Windows</summary>
+  1. Open a Terminal window and paste: <code>git clone https://github.com/Mas9311/stock-average.git</code><br>
+  2. <code>cd stock-average/</code><br>
+  3. Run the program: <code>python.exe run.py</code><br>
+  Append the <code>-h</code> | <code>--help</code> argument to view all accepted arguments.<br>
+</details>
 
 ## Methodology ##
 
 Have you ever wanted to take the mean of N items, then wanted to see the impact for (N + 1) items?<br>
+
+ - i.e. Finding what you need to score on the final exam to attain a desired letter grade.
+ 
 Thankfully, you don't need to re-enter those items every time if you record the numerator and denominator beforehand.<br>
 
- * i.e. Finding what you need to score on the final to reach a certain letter grade by averaging your existing exams.
 
-
-###### Scenario: ######
+## Scenario:
 
  - You previously purchased some shares of a stock at a high price, and the price has dropped since then.
- - Because the stock is "on sale", you are willing to spend some money today to lower your average.
+ - Because the stock is "on sale", you are willing to spend some money today to help lower your current average.
  - You now need to quantify how many shares you would need to purchase at the current price.
 
 This program will display your potential averages incrementally, so you can gauge for yourself.<br>
-For cryptocurrencies, potential averages will be displayed in increments of square root of the amount allotted.<br>
+
+ - Command Line Interface will print a wall of text.
+ - Graphical User Interface has an option to display as a T-Chart or a Graph.
 
 #### Formula: ####
+
 
 *n* represents the amount of shares you previously purchased at the *oldPrice*.<br>
 *x* represents the amount of shares you would potentially need to buy at the *currentPrice*.
@@ -39,5 +51,3 @@ For cryptocurrencies, potential averages will be displayed in increments of squa
 <pre>(n * oldPrice) + (x * currentPrice)
 -----------------------------------
               (n + x)</pre>
-
-For cryptocurrencies, *x* will account for purchasing a fraction of a coin.
