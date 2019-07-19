@@ -219,7 +219,7 @@ class GUI(Frame):
                 'type': 'Currency',
             },
             {  # Allotted Money Frame
-                'description': 'Enter the amount you willing to spend today.',
+                'description': 'Enter the amount you\'re willing to spend.',
                 'frame_var': None,
                 'index': 6,
                 'key': 'allotted_money',
